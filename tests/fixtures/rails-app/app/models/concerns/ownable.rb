@@ -1,0 +1,2 @@
+module Ownable
+end

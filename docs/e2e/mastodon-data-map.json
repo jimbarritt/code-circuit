@@ -1,0 +1,3963 @@
+{
+  "system": "mastodon",
+  "language": "ruby",
+  "framework": "rails",
+  "captured": "extracted by cc",
+  "endpoints": [
+    {
+      "id": "POST /inbox",
+      "method": "POST",
+      "path": "/inbox",
+      "entry": "ActivityPub::InboxesController#create",
+      "rule": "rails-routes"
+    },
+    {
+      "id": "POST /api/v1/statuses",
+      "method": "POST",
+      "path": "/api/v1/statuses",
+      "entry": "Api::V1::StatusesController#create",
+      "rule": "rails-routes"
+    },
+    {
+      "id": "POST /api/v1/statuses/:status_id/favourite",
+      "method": "POST",
+      "path": "/api/v1/statuses/:status_id/favourite",
+      "entry": "Api::V1::Statuses::FavouritesController#create",
+      "rule": "rails-routes"
+    },
+    {
+      "id": "GET /api/v1/timelines/home",
+      "method": "GET",
+      "path": "/api/v1/timelines/home",
+      "entry": "Api::V1::Timelines::HomeController#show",
+      "rule": "rails-routes"
+    },
+    {
+      "id": "GET /api/v1/notifications",
+      "method": "GET",
+      "path": "/api/v1/notifications",
+      "entry": "Api::V1::NotificationsController#index",
+      "rule": "rails-routes"
+    },
+    {
+      "id": "POST /api/v1/accounts/:id/follow",
+      "method": "POST",
+      "path": "/api/v1/accounts/:id/follow",
+      "entry": "Api::V1::AccountsController#follow",
+      "rule": "rails-routes"
+    }
+  ],
+  "externals": [
+    {
+      "id": "redis",
+      "name": "Redis"
+    },
+    {
+      "id": "postgresql",
+      "name": "PostgreSQL"
+    },
+    {
+      "id": "remote-http",
+      "name": "Remote servers (HTTP)"
+    },
+    {
+      "id": "web-push",
+      "name": "Web Push gateways"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ActivityPub::InboxesController#create",
+      "name": "ActivityPub::InboxesController#create",
+      "kind": "controller",
+      "file": "app/controllers/activitypub/inboxes_controller.rb"
+    },
+    {
+      "id": "Api::V1::StatusesController#create",
+      "name": "Api::V1::StatusesController#create",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/statuses_controller.rb"
+    },
+    {
+      "id": "Api::V1::Statuses::FavouritesController#create",
+      "name": "Api::V1::Statuses::FavouritesController#create",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/statuses/favourites_controller.rb"
+    },
+    {
+      "id": "Api::V1::Timelines::HomeController#show",
+      "name": "Api::V1::Timelines::HomeController#show",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/timelines/home_controller.rb"
+    },
+    {
+      "id": "Api::V1::NotificationsController#index",
+      "name": "Api::V1::NotificationsController#index",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/notifications_controller.rb"
+    },
+    {
+      "id": "Api::V1::AccountsController#follow",
+      "name": "Api::V1::AccountsController#follow",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/accounts_controller.rb"
+    },
+    {
+      "id": "ResolveAccountWorker",
+      "name": "ResolveAccountWorker",
+      "kind": "worker",
+      "file": "app/workers/resolve_account_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::ProcessingWorker",
+      "name": "ActivityPub::ProcessingWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/processing_worker.rb",
+      "queue": "ingress"
+    },
+    {
+      "id": "DeliveryFailureTracker",
+      "name": "DeliveryFailureTracker",
+      "kind": "adapter",
+      "file": "app/lib/delivery_failure_tracker.rb"
+    },
+    {
+      "id": "SignatureParser",
+      "name": "SignatureParser",
+      "kind": "adapter",
+      "file": "app/lib/signature_parser.rb"
+    },
+    {
+      "id": "ActivityPub::PrepareFollowersSynchronizationService",
+      "name": "ActivityPub::PrepareFollowersSynchronizationService",
+      "kind": "service",
+      "file": "app/services/activitypub/prepare_followers_synchronization_service.rb"
+    },
+    {
+      "id": "PostStatusService",
+      "name": "PostStatusService",
+      "kind": "service",
+      "file": "app/services/post_status_service.rb"
+    },
+    {
+      "id": "ScheduledStatus",
+      "name": "ScheduledStatus",
+      "kind": "model",
+      "file": "app/models/scheduled_status.rb"
+    },
+    {
+      "id": "FavouriteService",
+      "name": "FavouriteService",
+      "kind": "service",
+      "file": "app/services/favourite_service.rb"
+    },
+    {
+      "id": "HomeFeed",
+      "name": "HomeFeed",
+      "kind": "model",
+      "file": "app/models/home_feed.rb"
+    },
+    {
+      "id": "Status",
+      "name": "Status",
+      "kind": "model",
+      "file": "app/models/status.rb"
+    },
+    {
+      "id": "Notification",
+      "name": "Notification",
+      "kind": "model",
+      "file": "app/models/notification.rb"
+    },
+    {
+      "id": "FollowService",
+      "name": "FollowService",
+      "kind": "service",
+      "file": "app/services/follow_service.rb"
+    },
+    {
+      "id": "ResolveAccountService",
+      "name": "ResolveAccountService",
+      "kind": "service",
+      "file": "app/services/resolve_account_service.rb"
+    },
+    {
+      "id": "Account",
+      "name": "Account",
+      "kind": "model",
+      "file": "app/models/account.rb"
+    },
+    {
+      "id": "ActivityPub::ProcessActivityService",
+      "name": "ActivityPub::ProcessActivityService",
+      "kind": "service",
+      "file": "app/services/activitypub/process_activity_service.rb"
+    },
+    {
+      "id": "ActivityPub::FollowersSynchronizationWorker",
+      "name": "ActivityPub::FollowersSynchronizationWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/followers_synchronization_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "LinkCrawlWorker",
+      "name": "LinkCrawlWorker",
+      "kind": "worker",
+      "file": "app/workers/link_crawl_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "DistributionWorker",
+      "name": "DistributionWorker",
+      "kind": "worker",
+      "file": "app/workers/distribution_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "ActivityPub::DistributionWorker",
+      "name": "ActivityPub::DistributionWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/distribution_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "PollExpirationNotifyWorker",
+      "name": "PollExpirationNotifyWorker",
+      "kind": "worker",
+      "file": "app/workers/poll_expiration_notify_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "ActivityPub::QuoteRequestWorker",
+      "name": "ActivityPub::QuoteRequestWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/quote_request_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "EmailDistributionWorker",
+      "name": "EmailDistributionWorker",
+      "kind": "worker",
+      "file": "app/workers/email_distribution_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "Antispam",
+      "name": "Antispam",
+      "kind": "adapter",
+      "file": "app/lib/antispam.rb"
+    },
+    {
+      "id": "ApplicationRecord",
+      "name": "ApplicationRecord",
+      "kind": "model",
+      "file": "app/models/application_record.rb"
+    },
+    {
+      "id": "Quote",
+      "name": "Quote",
+      "kind": "model",
+      "file": "app/models/quote.rb"
+    },
+    {
+      "id": "ProcessLinksService",
+      "name": "ProcessLinksService",
+      "kind": "service",
+      "file": "app/services/process_links_service.rb"
+    },
+    {
+      "id": "Trends",
+      "name": "Trends",
+      "kind": "model",
+      "file": "app/models/trends.rb"
+    },
+    {
+      "id": "Setting",
+      "name": "Setting",
+      "kind": "model",
+      "file": "app/models/setting.rb"
+    },
+    {
+      "id": "ProcessMentionsService",
+      "name": "ProcessMentionsService",
+      "kind": "service",
+      "file": "app/services/process_mentions_service.rb"
+    },
+    {
+      "id": "ProcessHashtagsService",
+      "name": "ProcessHashtagsService",
+      "kind": "service",
+      "file": "app/services/process_hashtags_service.rb"
+    },
+    {
+      "id": "ActivityTracker",
+      "name": "ActivityTracker",
+      "kind": "adapter",
+      "file": "app/lib/activity_tracker.rb"
+    },
+    {
+      "id": "LocalNotificationWorker",
+      "name": "LocalNotificationWorker",
+      "kind": "worker",
+      "file": "app/workers/local_notification_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "ActivityPub::DeliveryWorker",
+      "name": "ActivityPub::DeliveryWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/delivery_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "Favourite",
+      "name": "Favourite",
+      "kind": "model",
+      "file": "app/models/favourite.rb"
+    },
+    {
+      "id": "TriggerWebhookWorker",
+      "name": "TriggerWebhookWorker",
+      "kind": "worker",
+      "file": "app/workers/trigger_webhook_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "ActivityPub::TagManager",
+      "name": "ActivityPub::TagManager",
+      "kind": "adapter",
+      "file": "app/lib/activitypub/tag_manager.rb"
+    },
+    {
+      "id": "Extractor",
+      "name": "Extractor",
+      "kind": "adapter",
+      "file": "app/lib/extractor.rb"
+    },
+    {
+      "id": "TagManager",
+      "name": "TagManager",
+      "kind": "adapter",
+      "file": "app/lib/tag_manager.rb"
+    },
+    {
+      "id": "EntityCache",
+      "name": "EntityCache",
+      "kind": "adapter",
+      "file": "app/lib/entity_cache.rb"
+    },
+    {
+      "id": "MergeWorker",
+      "name": "MergeWorker",
+      "kind": "worker",
+      "file": "app/workers/merge_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "FeatureUsageTracker",
+      "name": "FeatureUsageTracker",
+      "kind": "adapter",
+      "file": "app/lib/feature_usage_tracker.rb"
+    },
+    {
+      "id": "AccountDeletionWorker",
+      "name": "AccountDeletionWorker",
+      "kind": "worker",
+      "file": "app/workers/account_deletion_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::FetchRemoteAccountService",
+      "name": "ActivityPub::FetchRemoteAccountService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_remote_account_service.rb"
+    },
+    {
+      "id": "Webfinger",
+      "name": "Webfinger",
+      "kind": "adapter",
+      "file": "app/lib/webfinger.rb"
+    },
+    {
+      "id": "AccountRefreshWorker",
+      "name": "AccountRefreshWorker",
+      "kind": "worker",
+      "file": "app/workers/account_refresh_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "FeedManager",
+      "name": "FeedManager",
+      "kind": "adapter",
+      "file": "app/lib/feed_manager.rb"
+    },
+    {
+      "id": "ActivityPub::OpenTelemetry",
+      "name": "ActivityPub::OpenTelemetry",
+      "kind": "adapter",
+      "file": "app/lib/activitypub/opentelemetry.rb"
+    },
+    {
+      "id": "ActivityPub::Activity",
+      "name": "ActivityPub::Activity",
+      "kind": "adapter",
+      "file": "app/lib/activitypub/activity.rb"
+    },
+    {
+      "id": "ActivityPub::LinkedDataSignature",
+      "name": "ActivityPub::LinkedDataSignature",
+      "kind": "adapter",
+      "file": "app/lib/activitypub/linked_data_signature.rb"
+    },
+    {
+      "id": "ActivityPub::ObjectIntegrityProof",
+      "name": "ActivityPub::ObjectIntegrityProof",
+      "kind": "adapter",
+      "file": "app/lib/activitypub/object_integrity_proof.rb"
+    },
+    {
+      "id": "ActivityPub::SynchronizeFollowersService",
+      "name": "ActivityPub::SynchronizeFollowersService",
+      "kind": "service",
+      "file": "app/services/activitypub/synchronize_followers_service.rb"
+    },
+    {
+      "id": "FetchLinkCardService",
+      "name": "FetchLinkCardService",
+      "kind": "service",
+      "file": "app/services/fetch_link_card_service.rb"
+    },
+    {
+      "id": "FanOutOnWriteService",
+      "name": "FanOutOnWriteService",
+      "kind": "service",
+      "file": "app/services/fan_out_on_write_service.rb"
+    },
+    {
+      "id": "StatusReachFinder",
+      "name": "StatusReachFinder",
+      "kind": "adapter",
+      "file": "app/lib/status_reach_finder.rb"
+    },
+    {
+      "id": "ActivityPub::DistributePollUpdateWorker",
+      "name": "ActivityPub::DistributePollUpdateWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/distribute_poll_update_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "Poll",
+      "name": "Poll",
+      "kind": "model",
+      "file": "app/models/poll.rb"
+    },
+    {
+      "id": "ActivityPub::QuoteRefreshWorker",
+      "name": "ActivityPub::QuoteRefreshWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/quote_refresh_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "Instance",
+      "name": "Instance",
+      "kind": "model",
+      "file": "app/models/instance.rb"
+    },
+    {
+      "id": "Collection",
+      "name": "Collection",
+      "kind": "model",
+      "file": "app/models/collection.rb"
+    },
+    {
+      "id": "ResolveURLService",
+      "name": "ResolveURLService",
+      "kind": "service",
+      "file": "app/services/resolve_url_service.rb"
+    },
+    {
+      "id": "TaggedObject",
+      "name": "TaggedObject",
+      "kind": "model",
+      "file": "app/models/tagged_object.rb"
+    },
+    {
+      "id": "AccountDomainBlock",
+      "name": "AccountDomainBlock",
+      "kind": "model",
+      "file": "app/models/account_domain_block.rb"
+    },
+    {
+      "id": "Mention",
+      "name": "Mention",
+      "kind": "model",
+      "file": "app/models/mention.rb"
+    },
+    {
+      "id": "Tag",
+      "name": "Tag",
+      "kind": "model",
+      "file": "app/models/tag.rb"
+    },
+    {
+      "id": "NotifyService",
+      "name": "NotifyService",
+      "kind": "service",
+      "file": "app/services/notify_service.rb"
+    },
+    {
+      "id": "Request",
+      "name": "Request",
+      "kind": "adapter",
+      "file": "app/lib/request.rb"
+    },
+    {
+      "id": "RequestPool",
+      "name": "RequestPool",
+      "kind": "adapter",
+      "file": "app/lib/request_pool.rb"
+    },
+    {
+      "id": "Keypair",
+      "name": "Keypair",
+      "kind": "model",
+      "file": "app/models/keypair.rb"
+    },
+    {
+      "id": "WebhookService",
+      "name": "WebhookService",
+      "kind": "service",
+      "file": "app/services/webhook_service.rb"
+    },
+    {
+      "id": "List",
+      "name": "List",
+      "kind": "model",
+      "file": "app/models/list.rb"
+    },
+    {
+      "id": "DeleteAccountService",
+      "name": "DeleteAccountService",
+      "kind": "service",
+      "file": "app/services/delete_account_service.rb"
+    },
+    {
+      "id": "PushUpdateWorker",
+      "name": "PushUpdateWorker",
+      "kind": "worker",
+      "file": "app/workers/push_update_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "UnfollowService",
+      "name": "UnfollowService",
+      "kind": "service",
+      "file": "app/services/unfollow_service.rb"
+    },
+    {
+      "id": "Follow",
+      "name": "Follow",
+      "kind": "model",
+      "file": "app/models/follow.rb"
+    },
+    {
+      "id": "PreviewCard",
+      "name": "PreviewCard",
+      "kind": "model",
+      "file": "app/models/preview_card.rb"
+    },
+    {
+      "id": "PreviewCardsStatus",
+      "name": "PreviewCardsStatus",
+      "kind": "model",
+      "file": "app/models/preview_cards_status.rb"
+    },
+    {
+      "id": "FetchOEmbedService",
+      "name": "FetchOEmbedService",
+      "kind": "service",
+      "file": "app/services/fetch_oembed_service.rb"
+    },
+    {
+      "id": "LinkDetailsExtractor",
+      "name": "LinkDetailsExtractor",
+      "kind": "adapter",
+      "file": "app/lib/link_details_extractor.rb"
+    },
+    {
+      "id": "PreviewCardProvider",
+      "name": "PreviewCardProvider",
+      "kind": "model",
+      "file": "app/models/preview_card_provider.rb"
+    },
+    {
+      "id": "FeedInsertWorker",
+      "name": "FeedInsertWorker",
+      "kind": "worker",
+      "file": "app/workers/feed_insert_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "TagFollow",
+      "name": "TagFollow",
+      "kind": "model",
+      "file": "app/models/tag_follow.rb"
+    },
+    {
+      "id": "AccountConversation",
+      "name": "AccountConversation",
+      "kind": "model",
+      "file": "app/models/account_conversation.rb"
+    },
+    {
+      "id": "InlineRenderer",
+      "name": "InlineRenderer",
+      "kind": "adapter",
+      "file": "app/lib/inline_renderer.rb"
+    },
+    {
+      "id": "Relay",
+      "name": "Relay",
+      "kind": "model",
+      "file": "app/models/relay.rb"
+    },
+    {
+      "id": "ActivityPub::VerifyQuoteService",
+      "name": "ActivityPub::VerifyQuoteService",
+      "kind": "service",
+      "file": "app/services/activitypub/verify_quote_service.rb"
+    },
+    {
+      "id": "ActivityPub::FetchRemoteActorService",
+      "name": "ActivityPub::FetchRemoteActorService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_remote_actor_service.rb"
+    },
+    {
+      "id": "ActivityPub::Activity::Create",
+      "name": "ActivityPub::Activity::Create",
+      "kind": "adapter",
+      "file": "app/lib/activitypub/activity/create.rb"
+    },
+    {
+      "id": "FetchRemoteStatusService",
+      "name": "FetchRemoteStatusService",
+      "kind": "service",
+      "file": "app/services/fetch_remote_status_service.rb"
+    },
+    {
+      "id": "ActivityPub::FetchRemoteFeaturedCollectionService",
+      "name": "ActivityPub::FetchRemoteFeaturedCollectionService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_remote_featured_collection_service.rb"
+    },
+    {
+      "id": "FetchResourceService",
+      "name": "FetchResourceService",
+      "kind": "service",
+      "file": "app/services/fetch_resource_service.rb"
+    },
+    {
+      "id": "HashtagNormalizer",
+      "name": "HashtagNormalizer",
+      "kind": "adapter",
+      "file": "app/lib/hashtag_normalizer.rb"
+    },
+    {
+      "id": "Web::PushNotificationWorker",
+      "name": "Web::PushNotificationWorker",
+      "kind": "worker",
+      "file": "app/workers/web/push_notification_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "NotificationPolicy",
+      "name": "NotificationPolicy",
+      "kind": "model",
+      "file": "app/models/notification_policy.rb"
+    },
+    {
+      "id": "NotificationPermission",
+      "name": "NotificationPermission",
+      "kind": "model",
+      "file": "app/models/notification_permission.rb"
+    },
+    {
+      "id": "NotificationRequest",
+      "name": "NotificationRequest",
+      "kind": "model",
+      "file": "app/models/notification_request.rb"
+    },
+    {
+      "id": "Web::PushSubscription",
+      "name": "Web::PushSubscription",
+      "kind": "model",
+      "file": "app/models/web/push_subscription.rb"
+    },
+    {
+      "id": "Webhooks::DeliveryWorker",
+      "name": "Webhooks::DeliveryWorker",
+      "kind": "worker",
+      "file": "app/workers/webhooks/delivery_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "Webhook",
+      "name": "Webhook",
+      "kind": "model",
+      "file": "app/models/webhook.rb"
+    },
+    {
+      "id": "ActivityPub::LowPriorityDeliveryWorker",
+      "name": "ActivityPub::LowPriorityDeliveryWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/low_priority_delivery_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "BatchedRemoveStatusService",
+      "name": "BatchedRemoveStatusService",
+      "kind": "service",
+      "file": "app/services/batched_remove_status_service.rb"
+    },
+    {
+      "id": "StatusStat",
+      "name": "StatusStat",
+      "kind": "model",
+      "file": "app/models/status_stat.rb"
+    },
+    {
+      "id": "StatusCacheHydrator",
+      "name": "StatusCacheHydrator",
+      "kind": "adapter",
+      "file": "app/lib/status_cache_hydrator.rb"
+    },
+    {
+      "id": "UnmergeWorker",
+      "name": "UnmergeWorker",
+      "kind": "worker",
+      "file": "app/workers/unmerge_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "FollowRequest",
+      "name": "FollowRequest",
+      "kind": "model",
+      "file": "app/models/follow_request.rb"
+    },
+    {
+      "id": "FastGeometryParser",
+      "name": "FastGeometryParser",
+      "kind": "adapter",
+      "file": "app/lib/fast_geometry_parser.rb"
+    },
+    {
+      "id": "PushConversationWorker",
+      "name": "PushConversationWorker",
+      "kind": "worker",
+      "file": "app/workers/push_conversation_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "ActivityPub::FetchRemoteStatusService",
+      "name": "ActivityPub::FetchRemoteStatusService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_remote_status_service.rb"
+    },
+    {
+      "id": "ActivityPub::ProcessAccountService",
+      "name": "ActivityPub::ProcessAccountService",
+      "kind": "service",
+      "file": "app/services/activitypub/process_account_service.rb"
+    },
+    {
+      "id": "RedownloadMediaWorker",
+      "name": "RedownloadMediaWorker",
+      "kind": "worker",
+      "file": "app/workers/redownload_media_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ThreadResolveWorker",
+      "name": "ThreadResolveWorker",
+      "kind": "worker",
+      "file": "app/workers/thread_resolve_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "MentionResolveWorker",
+      "name": "MentionResolveWorker",
+      "kind": "worker",
+      "file": "app/workers/mention_resolve_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "TaggedCollectionResolveWorker",
+      "name": "TaggedCollectionResolveWorker",
+      "kind": "worker",
+      "file": "app/workers/tagged_collection_resolve_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::FetchRepliesWorker",
+      "name": "ActivityPub::FetchRepliesWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/fetch_replies_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::RefetchAndVerifyQuoteWorker",
+      "name": "ActivityPub::RefetchAndVerifyQuoteWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/refetch_and_verify_quote_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::RawDistributionWorker",
+      "name": "ActivityPub::RawDistributionWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/raw_distribution_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "ActivityPub::ProcessFeaturedCollectionService",
+      "name": "ActivityPub::ProcessFeaturedCollectionService",
+      "kind": "service",
+      "file": "app/services/activitypub/process_featured_collection_service.rb"
+    },
+    {
+      "id": "NokogiriHandler",
+      "name": "NokogiriHandler",
+      "kind": "adapter",
+      "file": "app/lib/nokogiri_handler.rb"
+    },
+    {
+      "id": "WebPushRequest",
+      "name": "WebPushRequest",
+      "kind": "adapter",
+      "file": "app/lib/web_push_request.rb"
+    },
+    {
+      "id": "Web",
+      "name": "Web",
+      "kind": "model",
+      "file": "app/models/web.rb"
+    },
+    {
+      "id": "Webhooks::PayloadRenderer",
+      "name": "Webhooks::PayloadRenderer",
+      "kind": "adapter",
+      "file": "app/lib/webhooks/payload_renderer.rb"
+    },
+    {
+      "id": "RemoveStatusService",
+      "name": "RemoveStatusService",
+      "kind": "service",
+      "file": "app/services/remove_status_service.rb"
+    },
+    {
+      "id": "RedownloadAvatarWorker",
+      "name": "RedownloadAvatarWorker",
+      "kind": "worker",
+      "file": "app/workers/redownload_avatar_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "RedownloadHeaderWorker",
+      "name": "RedownloadHeaderWorker",
+      "kind": "worker",
+      "file": "app/workers/redownload_header_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::PostUpgradeWorker",
+      "name": "ActivityPub::PostUpgradeWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/post_upgrade_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "RefollowWorker",
+      "name": "RefollowWorker",
+      "kind": "worker",
+      "file": "app/workers/refollow_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "Admin::SuspensionWorker",
+      "name": "Admin::SuspensionWorker",
+      "kind": "worker",
+      "file": "app/workers/admin/suspension_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "Admin::UnsuspensionWorker",
+      "name": "Admin::UnsuspensionWorker",
+      "kind": "worker",
+      "file": "app/workers/admin/unsuspension_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::SynchronizeFeaturedCollectionWorker",
+      "name": "ActivityPub::SynchronizeFeaturedCollectionWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/synchronize_featured_collection_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::SynchronizeFeaturedTagsCollectionWorker",
+      "name": "ActivityPub::SynchronizeFeaturedTagsCollectionWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/synchronize_featured_tags_collection_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::SynchronizeFeaturedCollectionsCollectionWorker",
+      "name": "ActivityPub::SynchronizeFeaturedCollectionsCollectionWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/synchronize_featured_collections_collection_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "VerifyAccountLinksWorker",
+      "name": "VerifyAccountLinksWorker",
+      "kind": "worker",
+      "file": "app/workers/verify_account_links_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "AccountMergingWorker",
+      "name": "AccountMergingWorker",
+      "kind": "worker",
+      "file": "app/workers/account_merging_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "Multibase",
+      "name": "Multibase",
+      "kind": "adapter",
+      "file": "app/lib/multibase.rb"
+    },
+    {
+      "id": "DomainBlock",
+      "name": "DomainBlock",
+      "kind": "model",
+      "file": "app/models/domain_block.rb"
+    },
+    {
+      "id": "Tombstone",
+      "name": "Tombstone",
+      "kind": "model",
+      "file": "app/models/tombstone.rb"
+    },
+    {
+      "id": "CustomEmoji",
+      "name": "CustomEmoji",
+      "kind": "model",
+      "file": "app/models/custom_emoji.rb"
+    },
+    {
+      "id": "ActivityPub::Parser::InteractionPolicyParser",
+      "name": "ActivityPub::Parser::InteractionPolicyParser",
+      "kind": "adapter",
+      "file": "app/lib/activitypub/parser/interaction_policy_parser.rb"
+    },
+    {
+      "id": "MediaAttachment",
+      "name": "MediaAttachment",
+      "kind": "model",
+      "file": "app/models/media_attachment.rb"
+    },
+    {
+      "id": "ActivityPub::FetchRepliesService",
+      "name": "ActivityPub::FetchRepliesService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_replies_service.rb"
+    },
+    {
+      "id": "ActivityPub::ProcessFeaturedItemWorker",
+      "name": "ActivityPub::ProcessFeaturedItemWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/process_featured_item_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "NotifyOfCollectionUpdateService",
+      "name": "NotifyOfCollectionUpdateService",
+      "kind": "service",
+      "file": "app/services/notify_of_collection_update_service.rb"
+    },
+    {
+      "id": "StatusPin",
+      "name": "StatusPin",
+      "kind": "model",
+      "file": "app/models/status_pin.rb"
+    },
+    {
+      "id": "RevokeQuoteService",
+      "name": "RevokeQuoteService",
+      "kind": "service",
+      "file": "app/services/revoke_quote_service.rb"
+    },
+    {
+      "id": "UpdateMediaAttachmentsPermissionsService",
+      "name": "UpdateMediaAttachmentsPermissionsService",
+      "kind": "service",
+      "file": "app/services/update_media_attachments_permissions_service.rb"
+    },
+    {
+      "id": "SuspendAccountService",
+      "name": "SuspendAccountService",
+      "kind": "service",
+      "file": "app/services/suspend_account_service.rb"
+    },
+    {
+      "id": "UnsuspendAccountService",
+      "name": "UnsuspendAccountService",
+      "kind": "service",
+      "file": "app/services/unsuspend_account_service.rb"
+    },
+    {
+      "id": "ActivityPub::FetchFeaturedCollectionService",
+      "name": "ActivityPub::FetchFeaturedCollectionService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_featured_collection_service.rb"
+    },
+    {
+      "id": "ActivityPub::FetchFeaturedTagsCollectionService",
+      "name": "ActivityPub::FetchFeaturedTagsCollectionService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_featured_tags_collection_service.rb"
+    },
+    {
+      "id": "ActivityPub::FetchFeaturedCollectionsCollectionService",
+      "name": "ActivityPub::FetchFeaturedCollectionsCollectionService",
+      "kind": "service",
+      "file": "app/services/activitypub/fetch_featured_collections_collection_service.rb"
+    },
+    {
+      "id": "VerifyLinkService",
+      "name": "VerifyLinkService",
+      "kind": "service",
+      "file": "app/services/verify_link_service.rb"
+    },
+    {
+      "id": "PostProcessMediaWorker",
+      "name": "PostProcessMediaWorker",
+      "kind": "worker",
+      "file": "app/workers/post_process_media_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "CacheBusterWorker",
+      "name": "CacheBusterWorker",
+      "kind": "worker",
+      "file": "app/workers/cache_buster_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "VideoMetadataExtractor",
+      "name": "VideoMetadataExtractor",
+      "kind": "adapter",
+      "file": "app/lib/video_metadata_extractor.rb"
+    },
+    {
+      "id": "FetchReplyWorker",
+      "name": "FetchReplyWorker",
+      "kind": "worker",
+      "file": "app/workers/fetch_reply_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "WorkerBatch",
+      "name": "WorkerBatch",
+      "kind": "model",
+      "file": "app/models/worker_batch.rb"
+    },
+    {
+      "id": "ActivityPub::ProcessFeaturedItemService",
+      "name": "ActivityPub::ProcessFeaturedItemService",
+      "kind": "service",
+      "file": "app/services/activitypub/process_featured_item_service.rb"
+    },
+    {
+      "id": "AccountReachFinder",
+      "name": "AccountReachFinder",
+      "kind": "adapter",
+      "file": "app/lib/account_reach_finder.rb"
+    },
+    {
+      "id": "StatusTrend",
+      "name": "StatusTrend",
+      "kind": "model",
+      "file": "app/models/status_trend.rb"
+    },
+    {
+      "id": "FeaturedTag",
+      "name": "FeaturedTag",
+      "kind": "model",
+      "file": "app/models/featured_tag.rb"
+    },
+    {
+      "id": "CacheBuster",
+      "name": "CacheBuster",
+      "kind": "adapter",
+      "file": "app/lib/cache_buster.rb"
+    },
+    {
+      "id": "ActivityPub::VerifyFeaturedItemWorker",
+      "name": "ActivityPub::VerifyFeaturedItemWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/verify_featured_item_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "ActivityPub::VerifyFeaturedItemService",
+      "name": "ActivityPub::VerifyFeaturedItemService",
+      "kind": "service",
+      "file": "app/services/activitypub/verify_featured_item_service.rb"
+    },
+    {
+      "id": "CollectionItem",
+      "name": "CollectionItem",
+      "kind": "model",
+      "file": "app/models/collection_item.rb"
+    }
+  ],
+  "edges": [
+    {
+      "from": "ActivityPub::InboxesController#create",
+      "to": "ResolveAccountWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::InboxesController#create",
+      "to": "ActivityPub::ProcessingWorker",
+      "kind": "async",
+      "queue": "ingress",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::InboxesController#create",
+      "to": "DeliveryFailureTracker",
+      "kind": "sync",
+      "rule": "controller-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::InboxesController#create",
+      "to": "SignatureParser",
+      "kind": "sync",
+      "rule": "controller-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::InboxesController#create",
+      "to": "ActivityPub::PrepareFollowersSynchronizationService",
+      "kind": "sync",
+      "rule": "controller-uses-service"
+    },
+    {
+      "from": "Api::V1::StatusesController#create",
+      "to": "PostStatusService",
+      "kind": "sync",
+      "rule": "controller-uses-service"
+    },
+    {
+      "from": "Api::V1::StatusesController#create",
+      "to": "ScheduledStatus",
+      "kind": "sync",
+      "rule": "controller-uses-model"
+    },
+    {
+      "from": "Api::V1::Statuses::FavouritesController#create",
+      "to": "FavouriteService",
+      "kind": "sync",
+      "rule": "controller-uses-service"
+    },
+    {
+      "from": "Api::V1::Timelines::HomeController#show",
+      "to": "HomeFeed",
+      "kind": "sync",
+      "rule": "controller-uses-model"
+    },
+    {
+      "from": "Api::V1::Timelines::HomeController#show",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "controller-uses-model"
+    },
+    {
+      "from": "Api::V1::NotificationsController#index",
+      "to": "Notification",
+      "kind": "sync",
+      "rule": "controller-uses-model"
+    },
+    {
+      "from": "Api::V1::NotificationsController#index",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "controller-uses-model"
+    },
+    {
+      "from": "Api::V1::AccountsController#follow",
+      "to": "FollowService",
+      "kind": "sync",
+      "rule": "controller-uses-service"
+    },
+    {
+      "from": "ResolveAccountWorker",
+      "to": "ResolveAccountService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::ProcessingWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessingWorker",
+      "to": "ActivityPub::ProcessActivityService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "DeliveryFailureTracker",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::PrepareFollowersSynchronizationService",
+      "to": "ActivityPub::FollowersSynchronizationWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "LinkCrawlWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "DistributionWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "ActivityPub::DistributionWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "PollExpirationNotifyWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "ActivityPub::QuoteRequestWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "EmailDistributionWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "Antispam",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "ApplicationRecord",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "Quote",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "ProcessLinksService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "Trends",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "Setting",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "ProcessMentionsService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "ProcessHashtagsService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "ActivityTracker",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "PostStatusService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ScheduledStatus",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "FavouriteService",
+      "to": "LocalNotificationWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FavouriteService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FavouriteService",
+      "to": "Favourite",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FavouriteService",
+      "to": "Trends",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FavouriteService",
+      "to": "ActivityTracker",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "HomeFeed",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "Status",
+      "to": "TriggerWebhookWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "Status",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Status",
+      "to": "Extractor",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Status",
+      "to": "TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Status",
+      "to": "EntityCache",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Status",
+      "to": "ActivityTracker",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Status",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Notification",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "FollowService",
+      "to": "LocalNotificationWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FollowService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FollowService",
+      "to": "MergeWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FollowService",
+      "to": "ActivityTracker",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FollowService",
+      "to": "FeatureUsageTracker",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FollowService",
+      "to": "HomeFeed",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ResolveAccountService",
+      "to": "AccountDeletionWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ResolveAccountService",
+      "to": "ActivityPub::FetchRemoteAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ResolveAccountService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ResolveAccountService",
+      "to": "TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ResolveAccountService",
+      "to": "Webfinger",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ResolveAccountService",
+      "to": "DeliveryFailureTracker",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "Account",
+      "to": "AccountRefreshWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "Account",
+      "to": "TriggerWebhookWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "Account",
+      "to": "DeliveryFailureTracker",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Account",
+      "to": "TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Account",
+      "to": "EntityCache",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Account",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Account",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Account",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::ProcessActivityService",
+      "to": "ActivityPub::OpenTelemetry",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessActivityService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessActivityService",
+      "to": "ActivityPub::Activity",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessActivityService",
+      "to": "ActivityPub::LinkedDataSignature",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessActivityService",
+      "to": "ActivityPub::ObjectIntegrityProof",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FollowersSynchronizationWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::FollowersSynchronizationWorker",
+      "to": "ActivityPub::SynchronizeFollowersService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "LinkCrawlWorker",
+      "to": "FetchLinkCardService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "LinkCrawlWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "DistributionWorker",
+      "to": "FanOutOnWriteService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "DistributionWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::DistributionWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::DistributionWorker",
+      "to": "StatusReachFinder",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "PollExpirationNotifyWorker",
+      "to": "ActivityPub::DistributePollUpdateWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PollExpirationNotifyWorker",
+      "to": "LocalNotificationWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "PollExpirationNotifyWorker",
+      "to": "Poll",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "PollExpirationNotifyWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::QuoteRequestWorker",
+      "to": "Quote",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "EmailDistributionWorker",
+      "to": "Setting",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "EmailDistributionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "EmailDistributionWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "EmailDistributionWorker",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "Antispam",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ApplicationRecord",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Quote",
+      "to": "ActivityPub::QuoteRefreshWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "Quote",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Quote",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Quote",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ProcessLinksService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ProcessLinksService",
+      "to": "Extractor",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ProcessLinksService",
+      "to": "Instance",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ProcessLinksService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ProcessLinksService",
+      "to": "Collection",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ProcessLinksService",
+      "to": "ResolveURLService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ProcessLinksService",
+      "to": "TaggedObject",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "Setting",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Setting",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ProcessMentionsService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ProcessMentionsService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ProcessMentionsService",
+      "to": "TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ProcessMentionsService",
+      "to": "ResolveAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ProcessMentionsService",
+      "to": "Webfinger",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ProcessMentionsService",
+      "to": "AccountDomainBlock",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ProcessMentionsService",
+      "to": "Mention",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ProcessHashtagsService",
+      "to": "Extractor",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ProcessHashtagsService",
+      "to": "Tag",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityTracker",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "LocalNotificationWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "LocalNotificationWorker",
+      "to": "Notification",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "LocalNotificationWorker",
+      "to": "NotifyService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::DeliveryWorker",
+      "to": "DeliveryFailureTracker",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::DeliveryWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::DeliveryWorker",
+      "to": "Request",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::DeliveryWorker",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::DeliveryWorker",
+      "to": "RequestPool",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::DeliveryWorker",
+      "to": "Keypair",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "Favourite",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "TriggerWebhookWorker",
+      "to": "WebhookService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "EntityCache",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "MergeWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "MergeWorker",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "MergeWorker",
+      "to": "HomeFeed",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "MergeWorker",
+      "to": "List",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "FeatureUsageTracker",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "AccountDeletionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "AccountDeletionWorker",
+      "to": "DeleteAccountService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteAccountService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "AccountRefreshWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "AccountRefreshWorker",
+      "to": "ResolveAccountService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "FeedManager",
+      "to": "PushUpdateWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FeedManager",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::Activity",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFollowersService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFollowersService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFollowersService",
+      "to": "UnfollowService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFollowersService",
+      "to": "Follow",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "PreviewCard",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "Request",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "PreviewCardsStatus",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "Trends",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "Extractor",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "FetchOEmbedService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "LinkDetailsExtractor",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "PreviewCardProvider",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "ResolveAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "FetchLinkCardService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "LocalNotificationWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "PushUpdateWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "FeedInsertWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "TagFollow",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "AccountConversation",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "InlineRenderer",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FanOutOnWriteService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::DistributePollUpdateWorker",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::DistributePollUpdateWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::DistributePollUpdateWorker",
+      "to": "Relay",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "Poll",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Poll",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::QuoteRefreshWorker",
+      "to": "Quote",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::QuoteRefreshWorker",
+      "to": "ActivityPub::VerifyQuoteService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "Instance",
+      "to": "DeliveryFailureTracker",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Instance",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Collection",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Collection",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "ActivityPub::FetchRemoteActorService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "ActivityPub::Activity::Create",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "FetchRemoteStatusService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "ActivityPub::FetchRemoteFeaturedCollectionService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "FetchResourceService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ResolveURLService",
+      "to": "Collection",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "TaggedObject",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "AccountDomainBlock",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "AccountDomainBlock",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "Mention",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Tag",
+      "to": "HashtagNormalizer",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Tag",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "Web::PushNotificationWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "NotifyService",
+      "to": "NotificationPolicy",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "Notification",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "Follow",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "NotificationPermission",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "NotifyService",
+      "to": "NotificationRequest",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "InlineRenderer",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "NotifyService",
+      "to": "AccountConversation",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "Web::PushSubscription",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "NotifyService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "Request",
+      "to": "remote-http",
+      "kind": "io",
+      "rule": "http-client"
+    },
+    {
+      "from": "Keypair",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Keypair",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "WebhookService",
+      "to": "Webhooks::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "WebhookService",
+      "to": "Webhook",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "List",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "List",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "ActivityPub::LowPriorityDeliveryWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "Follow",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "BatchedRemoveStatusService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "Notification",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "NotificationRequest",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "StatusStat",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "Relay",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "DeleteAccountService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "PushUpdateWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "PushUpdateWorker",
+      "to": "StatusCacheHydrator",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "PushUpdateWorker",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "UnfollowService",
+      "to": "UnmergeWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "UnfollowService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "UnfollowService",
+      "to": "Follow",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "UnfollowService",
+      "to": "FollowRequest",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "Follow",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Follow",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Follow",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "PreviewCard",
+      "to": "FastGeometryParser",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "PreviewCard",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "PreviewCardsStatus",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "FetchOEmbedService",
+      "to": "Request",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchOEmbedService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "PreviewCardProvider",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "FeedInsertWorker",
+      "to": "LocalNotificationWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FeedInsertWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "FeedInsertWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "FeedInsertWorker",
+      "to": "List",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "FeedInsertWorker",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "FeedInsertWorker",
+      "to": "Follow",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "TagFollow",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "AccountConversation",
+      "to": "PushConversationWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "AccountConversation",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "AccountConversation",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "Relay",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "Relay",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Relay",
+      "to": "DeliveryFailureTracker",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Relay",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "ActivityPub::VerifyQuoteService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::VerifyQuoteService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::VerifyQuoteService",
+      "to": "ActivityPub::FetchRemoteStatusService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteActorService",
+      "to": "AccountDeletionWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteActorService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteActorService",
+      "to": "ActivityPub::ProcessAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteActorService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "LinkCrawlWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "ActivityPub::DistributionWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "FeedInsertWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "RedownloadMediaWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "ActivityPub::DistributePollUpdateWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "ThreadResolveWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "MentionResolveWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "TaggedCollectionResolveWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "ActivityPub::FetchRepliesWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "ActivityPub::RefetchAndVerifyQuoteWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::Activity::Create",
+      "to": "ActivityPub::RawDistributionWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FetchRemoteStatusService",
+      "to": "FetchResourceService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "FetchRemoteStatusService",
+      "to": "ActivityPub::FetchRemoteStatusService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteFeaturedCollectionService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteFeaturedCollectionService",
+      "to": "ActivityPub::ProcessFeaturedCollectionService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "FetchResourceService",
+      "to": "Request",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchResourceService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "FetchResourceService",
+      "to": "ActivityPub::FetchRemoteActorService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "FetchResourceService",
+      "to": "ActivityPub::Activity::Create",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "FetchResourceService",
+      "to": "NokogiriHandler",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "Web::PushNotificationWorker",
+      "to": "Web::PushSubscription",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "Web::PushNotificationWorker",
+      "to": "Notification",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "Web::PushNotificationWorker",
+      "to": "Request",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "Web::PushNotificationWorker",
+      "to": "WebPushRequest",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "Web::PushNotificationWorker",
+      "to": "Web",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "Web::PushNotificationWorker",
+      "to": "RequestPool",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "Web::PushNotificationWorker",
+      "to": "web-push",
+      "kind": "io",
+      "rule": "webpush-call"
+    },
+    {
+      "from": "NotificationPolicy",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "NotificationPermission",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "NotificationRequest",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Web::PushSubscription",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Webhooks::DeliveryWorker",
+      "to": "Webhook",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "Webhooks::DeliveryWorker",
+      "to": "Webhooks::PayloadRenderer",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "Webhooks::DeliveryWorker",
+      "to": "Request",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "Webhook",
+      "to": "Webhooks::PayloadRenderer",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "Webhook",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "BatchedRemoveStatusService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "BatchedRemoveStatusService",
+      "to": "PreviewCardsStatus",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "BatchedRemoveStatusService",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "BatchedRemoveStatusService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "StatusStat",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "StatusCacheHydrator",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "UnmergeWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "UnmergeWorker",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "UnmergeWorker",
+      "to": "List",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "FollowRequest",
+      "to": "MergeWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "FollowRequest",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "FollowRequest",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "FollowRequest",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "PushConversationWorker",
+      "to": "AccountConversation",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "PushConversationWorker",
+      "to": "InlineRenderer",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "PushConversationWorker",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "ActivityPub::Activity",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "ActivityPub::FetchRemoteAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "ActivityPub::Activity::Create",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "RemoveStatusService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRemoteStatusService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "AccountRefreshWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "RedownloadAvatarWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "RedownloadHeaderWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "ActivityPub::PostUpgradeWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "RefollowWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "Admin::SuspensionWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "Admin::UnsuspensionWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "ActivityPub::SynchronizeFeaturedCollectionWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "ActivityPub::SynchronizeFeaturedTagsCollectionWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "ActivityPub::SynchronizeFeaturedCollectionsCollectionWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "VerifyAccountLinksWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "AccountMergingWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "Webfinger",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "ActivityPub::FetchRemoteAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "Multibase",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "DomainBlock",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "Tombstone",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "CustomEmoji",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "ActivityPub::Parser::InteractionPolicyParser",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessAccountService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "RedownloadMediaWorker",
+      "to": "MediaAttachment",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ThreadResolveWorker",
+      "to": "DistributionWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ThreadResolveWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ThreadResolveWorker",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "ThreadResolveWorker",
+      "to": "FetchRemoteStatusService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "MentionResolveWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "MentionResolveWorker",
+      "to": "ActivityPub::FetchRemoteAccountService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "MentionResolveWorker",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "MentionResolveWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "TaggedCollectionResolveWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "TaggedCollectionResolveWorker",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "TaggedCollectionResolveWorker",
+      "to": "Collection",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "TaggedCollectionResolveWorker",
+      "to": "ActivityPub::FetchRemoteFeaturedCollectionService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRepliesWorker",
+      "to": "ActivityPub::FetchRepliesService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchRepliesWorker",
+      "to": "Status",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::RefetchAndVerifyQuoteWorker",
+      "to": "ActivityPub::DistributionWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::RefetchAndVerifyQuoteWorker",
+      "to": "Quote",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::RefetchAndVerifyQuoteWorker",
+      "to": "ActivityPub::VerifyQuoteService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::RawDistributionWorker",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::RawDistributionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedCollectionService",
+      "to": "ActivityPub::ProcessFeaturedItemWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedCollectionService",
+      "to": "Collection",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedCollectionService",
+      "to": "NotifyOfCollectionUpdateService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "WebPushRequest",
+      "to": "web-push",
+      "kind": "io",
+      "rule": "webpush-call"
+    },
+    {
+      "from": "RemoveStatusService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "RemoveStatusService",
+      "to": "StatusPin",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "RemoveStatusService",
+      "to": "RevokeQuoteService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "RemoveStatusService",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "RemoveStatusService",
+      "to": "StatusReachFinder",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "RemoveStatusService",
+      "to": "UpdateMediaAttachmentsPermissionsService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "RemoveStatusService",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "RedownloadAvatarWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "RedownloadAvatarWorker",
+      "to": "DomainBlock",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "RedownloadHeaderWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "RedownloadHeaderWorker",
+      "to": "DomainBlock",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::PostUpgradeWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "RefollowWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "RefollowWorker",
+      "to": "FollowService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "Admin::SuspensionWorker",
+      "to": "SuspendAccountService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "Admin::SuspensionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "Admin::UnsuspensionWorker",
+      "to": "UnsuspendAccountService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "Admin::UnsuspensionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFeaturedCollectionWorker",
+      "to": "ActivityPub::FetchFeaturedCollectionService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFeaturedCollectionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFeaturedTagsCollectionWorker",
+      "to": "ActivityPub::FetchFeaturedTagsCollectionService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFeaturedTagsCollectionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFeaturedCollectionsCollectionWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::SynchronizeFeaturedCollectionsCollectionWorker",
+      "to": "ActivityPub::FetchFeaturedCollectionsCollectionService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "VerifyAccountLinksWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "VerifyAccountLinksWorker",
+      "to": "VerifyLinkService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "AccountMergingWorker",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "DomainBlock",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "Tombstone",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "CustomEmoji",
+      "to": "FastGeometryParser",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "CustomEmoji",
+      "to": "EntityCache",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "CustomEmoji",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "CustomEmoji",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "MediaAttachment",
+      "to": "PostProcessMediaWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "MediaAttachment",
+      "to": "CacheBusterWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "MediaAttachment",
+      "to": "FastGeometryParser",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "MediaAttachment",
+      "to": "VideoMetadataExtractor",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "MediaAttachment",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "MediaAttachment",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::FetchRepliesService",
+      "to": "FetchReplyWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::FetchRepliesService",
+      "to": "WorkerBatch",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemWorker",
+      "to": "Collection",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemWorker",
+      "to": "ActivityPub::ProcessFeaturedItemService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "NotifyOfCollectionUpdateService",
+      "to": "LocalNotificationWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "NotifyOfCollectionUpdateService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "StatusPin",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "RevokeQuoteService",
+      "to": "DistributionWorker",
+      "kind": "async",
+      "queue": "default",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "RevokeQuoteService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "RevokeQuoteService",
+      "to": "StatusReachFinder",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "UpdateMediaAttachmentsPermissionsService",
+      "to": "CacheBusterWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "UpdateMediaAttachmentsPermissionsService",
+      "to": "MediaAttachment",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "SuspendAccountService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "SuspendAccountService",
+      "to": "Follow",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "SuspendAccountService",
+      "to": "AccountReachFinder",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "SuspendAccountService",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "SuspendAccountService",
+      "to": "UpdateMediaAttachmentsPermissionsService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "SuspendAccountService",
+      "to": "StatusTrend",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "UnsuspendAccountService",
+      "to": "ActivityPub::DeliveryWorker",
+      "kind": "async",
+      "queue": "push",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "UnsuspendAccountService",
+      "to": "ResolveAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "UnsuspendAccountService",
+      "to": "AccountReachFinder",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "UnsuspendAccountService",
+      "to": "FeedManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "UnsuspendAccountService",
+      "to": "UpdateMediaAttachmentsPermissionsService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedCollectionService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedCollectionService",
+      "to": "ActivityPub::FetchRemoteStatusService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedCollectionService",
+      "to": "StatusPin",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedCollectionService",
+      "to": "HashtagNormalizer",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedCollectionService",
+      "to": "FeaturedTag",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedTagsCollectionService",
+      "to": "FeaturedTag",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedTagsCollectionService",
+      "to": "HashtagNormalizer",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedCollectionsCollectionService",
+      "to": "ActivityPub::FetchRemoteFeaturedCollectionService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::FetchFeaturedCollectionsCollectionService",
+      "to": "ActivityPub::ProcessFeaturedCollectionService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "VerifyLinkService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "VerifyLinkService",
+      "to": "Request",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "VerifyLinkService",
+      "to": "NokogiriHandler",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "PostProcessMediaWorker",
+      "to": "MediaAttachment",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "CacheBusterWorker",
+      "to": "CacheBuster",
+      "kind": "sync",
+      "rule": "worker-uses-adapter"
+    },
+    {
+      "from": "FetchReplyWorker",
+      "to": "WorkerBatch",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "FetchReplyWorker",
+      "to": "FetchRemoteStatusService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "WorkerBatch",
+      "to": "redis",
+      "kind": "io",
+      "rule": "redis-call"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemService",
+      "to": "ActivityPub::VerifyFeaturedItemWorker",
+      "kind": "async",
+      "queue": "pull",
+      "rule": "sidekiq-enqueue"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemService",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "service-uses-adapter"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemService",
+      "to": "ActivityPub::ProcessFeaturedCollectionService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemService",
+      "to": "ActivityPub::FetchRemoteActorService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "ActivityPub::ProcessFeaturedItemService",
+      "to": "ActivityPub::VerifyFeaturedItemService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "StatusTrend",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "FeaturedTag",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    },
+    {
+      "from": "ActivityPub::VerifyFeaturedItemWorker",
+      "to": "CollectionItem",
+      "kind": "sync",
+      "rule": "worker-uses-model"
+    },
+    {
+      "from": "ActivityPub::VerifyFeaturedItemWorker",
+      "to": "ActivityPub::VerifyFeaturedItemService",
+      "kind": "sync",
+      "rule": "worker-uses-service"
+    },
+    {
+      "from": "ActivityPub::VerifyFeaturedItemService",
+      "to": "Account",
+      "kind": "sync",
+      "rule": "service-uses-model"
+    },
+    {
+      "from": "ActivityPub::VerifyFeaturedItemService",
+      "to": "ActivityPub::FetchRemoteAccountService",
+      "kind": "sync",
+      "rule": "service-uses-service"
+    },
+    {
+      "from": "CollectionItem",
+      "to": "ActivityPub::TagManager",
+      "kind": "sync",
+      "rule": "model-uses-adapter"
+    },
+    {
+      "from": "CollectionItem",
+      "to": "postgresql",
+      "kind": "io",
+      "rule": "activerecord-model"
+    }
+  ]
+}
