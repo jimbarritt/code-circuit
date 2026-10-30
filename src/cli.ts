@@ -1,4 +1,5 @@
 import { readFileSync, existsSync } from "node:fs";
+import { serveBoard } from "./server.ts";
 import { exportDataMap, importDataMap, openStore } from "./store.ts";
 
 const USAGE = `cc: draw a service as a circuit board
@@ -27,6 +28,17 @@ switch (command) {
   case "help":
     process.stdout.write(USAGE);
     break;
+  case "render": {
+    const [file, ...rest] = args;
+    if (!file || !existsSync(file)) fail("usage: cc render <data-map.json> [--port <n>]");
+    const pi = rest.indexOf("--port");
+    const port = pi >= 0 ? Number(rest[pi + 1]) : 0;
+    const db = openStore();
+    importDataMap(db, JSON.parse(readFileSync(file, "utf8")));
+    const server = serveBoard(db, { port });
+    process.stdout.write(`${server.url}\n`);
+    break;
+  }
   case "import": {
     const [json, dbPath] = args;
     if (!json || !dbPath) fail("usage: cc import <data-map.json> <store.db>");

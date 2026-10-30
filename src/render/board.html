@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>code-circuit</title>
+<style>
+
+  /* Layout: one wide board panel, controls above, inspector below. Single committed look: dark PCB. */
+  :root {
+    --bg: #0d1412;
+    --panel: #121c19;
+    --board: #0f2a22;
+    --board-edge: #1f5a46;
+    --grid: #163a2f;
+    --fg: #d9e6e0;
+    --muted: #7f9c92;
+    --copper: #c68a43;
+    --copper-dim: #5a4a33;
+    --hot: #ffd166;
+    --queue: #5fb4c9;
+    --kind-controller: #8fd3a8;
+    --kind-service: #e4c27a;
+    --kind-model: #9fb4ff;
+    --kind-worker: #5fb4c9;
+    --kind-adapter: #d49cff;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--sans); font-size: 14px; line-height: 1.45;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 18px 40px;
+  }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 12px; }
+  h1 { font-family: var(--mono); font-weight: 600; font-size: 18px; margin: 0; letter-spacing: 0.02em; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .toolbar .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  button {
+    font: 500 12px/1 var(--mono); color: var(--fg); background: var(--panel);
+    border: 1px solid var(--board-edge); border-radius: 3px; padding: 7px 10px; cursor: pointer;
+  }
+  button:hover { border-color: var(--copper); }
+  button:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+  button.active { background: var(--copper); color: #1a120a; border-color: var(--copper); }
+  button.toggle.active { background: var(--queue); border-color: var(--queue); }
+  .boardwrap { overflow-x: auto; border: 1px solid var(--board-edge); border-radius: 4px; background: var(--board); }
+  svg { display: block; width: auto; height: auto; font-family: var(--mono); }
+  .chip rect { fill: #0b1f19; stroke-width: 1.5; }
+  .chip text { font-size: 11px; fill: var(--fg); pointer-events: none; }
+  .chip .kind { font-size: 8px; letter-spacing: 0.08em; fill: var(--muted); }
+  .chip { cursor: pointer; }
+  .chip.dim { opacity: 0.22; }
+  .chip.sel rect { stroke: var(--hot); stroke-width: 2.5; }
+  .trace { fill: none; stroke: var(--copper); stroke-width: 1.6; }
+  .trace.async { stroke: var(--queue); stroke-dasharray: 5 4; }
+  .trace.io { stroke: var(--copper); stroke-width: 1.2; }
+  .trace.dim { stroke: var(--copper-dim); opacity: 0.35; }
+  .trace.async.dim { stroke: #2f4a52; }
+  .trace.lit { stroke: var(--hot); stroke-width: 2.4; }
+  .pad { cursor: pointer; }
+  .pad circle { fill: var(--board); stroke: var(--copper); stroke-width: 2.5; }
+  .pad.sel circle, .pad.lit circle { fill: var(--hot); stroke: var(--hot); }
+  .pad text { font-size: 10px; fill: var(--fg); }
+  .pad.dim { opacity: 0.3; }
+  .lane-label { font-size: 9px; fill: var(--queue); letter-spacing: 0.08em; }
+  .rail-label { font-size: 9px; fill: var(--copper); letter-spacing: 0.08em; }
+  .colhead { font-size: 9px; fill: var(--muted); letter-spacing: 0.12em; }
+  .below { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; margin-top: 14px; }
+  @media (max-width: 760px) { .below { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--board-edge); border-radius: 4px; padding: 12px 14px; min-width: 0; }
+  .panel h2 { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
+  .panel dt { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .panel dd { margin: 0; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  .panel ul { margin: 6px 0 0; padding-left: 18px; }
+  .panel li { font-family: var(--mono); font-size: 12px; }
+  .seam { display: inline-block; padding: 1px 6px; border-radius: 2px; font-size: 11px; font-family: var(--mono); background: #2a2f1a; color: var(--hot); }
+  pre { font-family: var(--mono); font-size: 11px; line-height: 1.4; margin: 0; max-height: 360px; overflow: auto; background: #0a100e; padding: 10px; border-radius: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 22px; height: 0; border-top: 2px solid var(--copper); }
+  .sw.async { border-top-style: dashed; border-color: var(--queue); }
+  .sw.lit { border-color: var(--hot); }
+  .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  @media (prefers-reduced-motion: no-preference) { .trace { transition: stroke 160ms, opacity 160ms; } .chip { transition: opacity 160ms; } }
+  [hidden] { display: none !important; }
+
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Circuit board</h1>
+  <p>Click a pad to light its path. Click a chip to see which endpoints pass through it. Tab to a pad or chip and press Enter or Space.</p>
+</header>
+
+<div class="toolbar">
+  <span class="lbl">Endpoints</span>
+  <div id="endpoint-buttons" style="display:contents"></div>
+  <button id="btn-reset">Reset</button>
+  <button id="btn-seams" class="toggle">Seam heat</button>
+  <button id="btn-data" class="toggle">Data map</button>
+</div>
+
+<div class="boardwrap"><svg id="board" role="img" aria-label="Circuit board diagram of the service"></svg></div>
+
+<div class="legend">
+  <span><i class="sw"></i> synchronous call</span>
+  <span><i class="sw async"></i> queue hop (via queue lane)</span>
+  <span><i class="sw lit"></i> selected path</span>
+  <span id="kinds"></span>
+</div>
+
+<div class="below">
+  <section class="panel" id="inspector">
+    <h2>Inspector</h2>
+    <div id="insp-body"><p class="note">Nothing selected. Pads on the left edge are inbound endpoints. Pads on the right edge are external systems. Dashed traces drop to a queue lane at the bottom and climb into a worker.</p></div>
+  </section>
+  <section class="panel" id="datapanel" hidden>
+    <h2>Data map (JSON)</h2>
+    <pre id="data-json"></pre>
+  </section>
+  <section class="panel" id="seampanel">
+    <h2>Seam reading</h2>
+    <div id="seam-body"></div>
+  </section>
+</div>
+
+<script>
+(async function () {
+  const NS = 'http://www.w3.org/2000/svg';
+  const get = (u) => fetch(u).then((r) => r.json());
+  const board = await get('/api/board');
+  const counts = await get('/api/seams');
+  const svg = document.getElementById('board');
+  svg.setAttribute('viewBox', '0 0 ' + board.width + ' ' + board.height);
+  svg.setAttribute('width', board.width);
+  svg.setAttribute('height', board.height);
+
+  const KIND = { controller: '--kind-controller', service: '--kind-service', model: '--kind-model', worker: '--kind-worker', adapter: '--kind-adapter' };
+  const kindColor = (k) => 'var(' + (KIND[k] || '--muted') + ')';
+  const el = (tag, attrs, parent, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text !== undefined) n.textContent = text;
+    (parent || svg).appendChild(n);
+    return n;
+  };
+  const h = (tag, attrs, children) => {
+    const n = document.createElement(tag);
+    for (const k in attrs || {}) n.setAttribute(k, attrs[k]);
+    for (const c of [].concat(children || [])) n.append(c);
+    return n;
+  };
+  const byId = {};
+  board.nodes.forEach((n) => (byId[n.id] = n));
+  board.pads.forEach((p) => (byId[p.id] = p));
+  const endpoints = board.pads.filter((p) => p.side === 'left');
+  const nameOf = (id) => (byId[id] ? byId[id].name || byId[id].label : id);
+
+  const defs = el('defs', {});
+  const marker = (id, color) => {
+    const m = el('marker', { id, viewBox: '0 0 8 8', refX: 7, refY: 4, markerWidth: 6, markerHeight: 6, orient: 'auto' }, defs);
+    el('path', { d: 'M0,0 L8,4 L0,8 z', fill: color }, m);
+  };
+  marker('arr', '#c68a43'); marker('arr-async', '#5fb4c9'); marker('arr-lit', '#ffd166');
+  const pat = el('pattern', { id: 'grid', width: 20, height: 20, patternUnits: 'userSpaceOnUse' }, defs);
+  el('path', { d: 'M 20 0 L 0 0 0 20', fill: 'none', stroke: '#163a2f', 'stroke-width': 0.6 }, pat);
+  el('rect', { x: 0, y: 0, width: board.width, height: board.height, fill: 'url(#grid)' });
+
+  const colX = {};
+  board.nodes.forEach((n) => (colX[n.column] = n.x));
+  board.columns.forEach((t, c) => { if (colX[c] !== undefined) el('text', { x: colX[c], y: 32, class: 'colhead' }, null, t); });
+  el('text', { x: 8, y: board.lanes.length ? board.lanes[0].y - 18 : 0, class: 'lane-label' }, null, board.lanes.length ? 'QUEUES' : '');
+  board.lanes.forEach((l) => {
+    el('path', { d: 'M 48 ' + l.y + ' L ' + (board.width - 30) + ' ' + l.y, stroke: '#1d3d44', 'stroke-width': 1, fill: 'none', 'stroke-dasharray': '2 6' });
+    el('text', { x: 8, y: l.y + 3, class: 'lane-label' }, null, l.queue);
+  });
+
+  const gTraces = el('g', { id: 'traces' });
+  const gNodes = el('g', { id: 'nodes' });
+  const gPads = el('g', { id: 'pads' });
+  const traceEls = {};
+  board.traces.forEach((t) => {
+    const d = t.points.map((p, i) => (i ? 'L ' : 'M ') + p[0] + ' ' + p[1]).join(' ');
+    traceEls[t.id] = el('path', { d, class: 'trace ' + t.kind, 'marker-end': t.kind === 'async' ? 'url(#arr-async)' : 'url(#arr)' }, gTraces);
+  });
+
+  const activate = (g, fn) => {
+    g.addEventListener('click', fn);
+    g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); fn(); } });
+  };
+  const nodeEls = {}, padEls = {};
+  board.nodes.forEach((n) => {
+    const g = el('g', { class: 'chip', 'data-id': n.id, tabindex: 0, role: 'button', 'aria-label': n.name }, gNodes);
+    el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 3, stroke: kindColor(n.kind) }, g);
+    for (let i = 0; i < 4; i++) {
+      el('rect', { x: n.x - 4, y: n.y + 6 + i * 8, width: 4, height: 4, fill: kindColor(n.kind) }, g);
+      el('rect', { x: n.x + n.w, y: n.y + 6 + i * 8, width: 4, height: 4, fill: kindColor(n.kind) }, g);
+    }
+    el('text', { x: n.x + 8, y: n.y + 17, class: 'kind' }, g, (n.kind + (n.queue ? ' · ' + n.queue : '')).toUpperCase());
+    el('text', { x: n.x + 8, y: n.y + 32 }, g, n.label);
+    el('title', {}, g, n.name);
+    nodeEls[n.id] = g;
+    activate(g, () => selectNode(n.id));
+  });
+  board.pads.forEach((p) => {
+    const g = el('g', { class: 'pad', 'data-id': p.id, tabindex: 0, role: 'button', 'aria-label': p.label }, gPads);
+    if (p.side === 'left') {
+      el('circle', { cx: p.x, cy: p.y, r: 7 }, g);
+      el('text', { x: byId[p.entry].x, y: byId[p.entry].y - 6 }, g, p.label);
+      activate(g, () => selectEndpoint(p.id));
+    } else {
+      el('circle', { cx: p.x, cy: p.y, r: 7 }, g);
+      el('text', { x: p.x - 12, y: p.y - 12, 'text-anchor': 'end' }, g, p.label);
+      activate(g, () => selectNode(p.id));
+    }
+    padEls[p.id] = g;
+  });
+
+  // ---- toolbar and inspector ----
+  const inspBody = document.getElementById('insp-body');
+  const epButtons = {};
+  endpoints.forEach((p) => {
+    const b = h('button', { id: 'btn-' + p.id }, p.label);
+    b.addEventListener('click', () => selectEndpoint(p.id));
+    document.getElementById('endpoint-buttons').append(b);
+    epButtons[p.id] = b;
+  });
+  const kinds = [...new Set(board.nodes.map((n) => n.kind))];
+  document.getElementById('kinds').append(...kinds.map((k) => {
+    const s = h('span', {}, [h('i', { class: 'dot', style: 'background:' + kindColor(k) }), ' ' + k]);
+    s.style.marginRight = '14px';
+    return s;
+  }));
+  document.getElementById('title').textContent = (document.title = board.title || 'Circuit board');
+
+  function clearStates() {
+    Object.values(traceEls).forEach((t) => { t.classList.remove('lit', 'dim'); t.setAttribute('marker-end', t.classList.contains('async') ? 'url(#arr-async)' : 'url(#arr)'); });
+    Object.values(nodeEls).forEach((n) => n.classList.remove('dim', 'sel'));
+    Object.values(padEls).forEach((n) => n.classList.remove('dim', 'sel', 'lit'));
+    Object.values(epButtons).forEach((b) => b.classList.remove('active'));
+  }
+  function light(edgeIds, nodeIds) {
+    board.traces.forEach((t) => {
+      const e = traceEls[t.id];
+      if (edgeIds.has(t.id)) { e.classList.add('lit'); e.setAttribute('marker-end', 'url(#arr-lit)'); } else e.classList.add('dim');
+    });
+    board.nodes.forEach((n) => { if (!nodeIds.has(n.id)) nodeEls[n.id].classList.add('dim'); });
+    board.pads.forEach((p) => padEls[p.id].classList.add(nodeIds.has(p.id) ? 'lit' : 'dim'));
+  }
+  const row = (k, v) => [h('dt', {}, k), h('dd', {}, v)];
+  const dl = (rows) => h('dl', {}, rows.flat());
+  const lines = (arr) => (arr.length ? arr.flatMap((s, i) => (i ? [h('br'), s] : [s])) : ['-']);
+  const edgeText = (t, other) => nameOf(other) + (t.kind === 'async' ? ' (queue ' + t.queue + ')' : '') + (t.rule ? ' [rule ' + t.rule + ']' : '');
+
+  async function selectEndpoint(id) {
+    clearStates();
+    const r = await get('/api/reach?endpoint=' + encodeURIComponent(id));
+    const nodes = new Set([id, ...r.nodes]);
+    const edges = new Set(['ep:' + id, ...r.edges.map(String)]);
+    light(edges, nodes);
+    padEls[id].classList.add('sel');
+    epButtons[id].classList.add('active');
+    const p = byId[id];
+    const chips = board.nodes.filter((n) => nodes.has(n.id));
+    const hops = board.traces.filter((t) => edges.has(t.id) && t.kind === 'async').length;
+    const io = board.pads.filter((x) => x.side === 'right' && nodes.has(x.id)).map((x) => x.label);
+    inspBody.replaceChildren(dl([
+      row('endpoint', p.label),
+      row('entry', nameOf(p.entry)),
+      row('chips on path', String(chips.length)),
+      row('queue hops', String(hops)),
+      row('touches', io.join(', ') || 'nothing outside the board'),
+      row('exclusive chips', chips.filter((n) => counts[n.id] === 1).map((n) => n.label).join(', ') || 'none'),
+    ]));
+  }
+  async function selectNode(id) {
+    clearStates();
+    const eps = (await get('/api/reached-by?id=' + encodeURIComponent(id))).endpoints;
+    const touching = board.traces.filter((t) => t.from === id || t.to === id);
+    const edges = new Set(touching.map((t) => t.id));
+    const nodes = new Set([id, ...touching.flatMap((t) => [t.from, t.to]), ...eps]);
+    light(edges, nodes);
+    (nodeEls[id] || padEls[id]).classList.add('sel');
+    eps.forEach((e) => epButtons[e].classList.add('active'));
+    const n = byId[id];
+    const ins = touching.filter((t) => t.to === id && !t.id.startsWith('ep:')).map((t) => edgeText(t, t.from));
+    const outs = touching.filter((t) => t.from === id).map((t) => edgeText(t, t.to));
+    inspBody.replaceChildren(
+      dl([
+        row('name', n.name || n.label),
+        ...(n.file ? [row('file', n.file)] : []),
+        row('kind', n.kind ? n.kind + (n.queue ? ' · queue "' + n.queue + '"' : '') : 'external'),
+        row('reached by', h('span', { class: 'seam' }, eps.length + ' of ' + endpoints.length + ' endpoints')),
+        row('inputs', lines(ins)),
+        row('outputs', lines(outs)),
+      ]),
+      h('ul', {}, eps.map((e) => h('li', {}, byId[e].label))),
+    );
+  }
+
+  let seamMode = false;
+  function seamHeat(on) {
+    seamMode = on;
+    const heat = ['#0b1f19', '#163b2a', '#4a4a1e', '#7a4a1a', '#9c3a1c', '#b82a1e', '#d11c1c'];
+    board.nodes.forEach((n) => nodeEls[n.id].querySelector('rect').style.fill = on ? heat[Math.min(counts[n.id] || 0, 6)] : '');
+  }
+  function seamText() {
+    const shared = board.nodes.filter((n) => counts[n.id] >= 3).sort((a, b) => counts[b.id] - counts[a.id]).slice(0, 12);
+    const single = board.nodes.filter((n) => counts[n.id] === 1).length;
+    document.getElementById('seam-body').replaceChildren(
+      h('p', { class: 'note' }, 'A chip reached by many endpoints is a junction: cutting there splits every path through it. A chip reached by one endpoint sits inside a seam you can cut along.'),
+      dl([
+        row('junctions', lines(shared.map((n) => n.label + ' ' + counts[n.id]))),
+        row('single-endpoint chips', single + ' of ' + board.nodes.length),
+      ]),
+    );
+  }
+  document.getElementById('btn-reset').addEventListener('click', () => { clearStates(); inspBody.replaceChildren(h('p', { class: 'note' }, 'Nothing selected.')); });
+  document.getElementById('btn-seams').addEventListener('click', (ev) => { seamHeat(!seamMode); ev.currentTarget.classList.toggle('active', seamMode); });
+  document.getElementById('btn-data').addEventListener('click', async (ev) => {
+    const p = document.getElementById('datapanel');
+    p.hidden = !p.hidden;
+    ev.currentTarget.classList.toggle('active', !p.hidden);
+    if (!p.hidden) document.getElementById('data-json').textContent = JSON.stringify(await get('/api/datamap'), null, 2);
+  });
+  seamText();
+  window.__board = { ready: true };
+  document.body.dataset.ready = '1';
+})();
+</script>
+</body>
+</html>
