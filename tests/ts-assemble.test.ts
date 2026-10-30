@@ -107,3 +107,95 @@ test("the system name falls back to the directory name", () => {
   expect(map.framework).toBeUndefined();
   expect(map.endpoints).toEqual([]);
 });
+
+test("provider bindings, abstract classes, inherited dependencies and calls make di-call edges", () => {
+  const root = repo({
+    "src/mail.ts": `import { Controller, Get } from "@nestjs/common";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import Redis from "ioredis";
+export abstract class AbstractMail { abstract send(): void; }
+export class SmtpMail extends AbstractMail { send() { this.redis.get('k'); } constructor(private redis: Redis) { super(); } }
+export abstract class AbstractStore { abstract put(): void; }
+export class S3Store extends AbstractStore { put() { this.cache.set('a', 'b'); } constructor(private cache: Redis) { super(); } }
+export class SesStore extends AbstractStore { put() { new SESClient({}).send(new SendEmailCommand({})); } }
+export class MailModule { static providers = [{ provide: AbstractMail, useClass: SmtpMail }]; }
+export class BaseService {
+  constructor(protected mail: AbstractMail, protected store: AbstractStore, protected logger: AppLogger) {}
+  protected notify() { this.mail.send(); this.logger.log('x'); }
+}
+export class AppLogger { log(m: string) {} }
+@Controller("a")
+export class AController extends BaseService {
+  @Get() list() { this.notify(); this.store.put(); }
+}`,
+  });
+  const map = extractTypeScript(root);
+  expect(validateDataMap(map)).toEqual([]);
+  expect(map.edges.filter((e) => e.kind === "sync")).toEqual([
+    { from: "app:AController", to: "app:S3Store", kind: "sync", rule: "di-call" },
+    { from: "app:AController", to: "app:SesStore", kind: "sync", rule: "di-call" },
+    { from: "app:AController", to: "app:SmtpMail", kind: "sync", rule: "di-call" },
+  ]);
+});
+
+test("ORM handle classes make no di-call for ORM methods, and plain function calls make fn-call edges", () => {
+  const root = repo({
+    "src/prisma.service.ts": `import { PrismaClient } from "@prisma/client";
+export class PrismaService extends PrismaClient {}`,
+    "src/users.repo.ts": `import { EntityRepository } from "@mikro-orm/core";
+export class UsersRepo extends EntityRepository<User> { custom() { return this.em.find(User, {}); } }`,
+    "src/a.controller.ts": `import { Controller, Get } from "@nestjs/common";
+import { PrismaService } from "./prisma.service";
+import { UsersRepo } from "./users.repo";
+import { publish } from "./kafka";
+@Controller("a")
+export class AController {
+  constructor(private prisma: PrismaService, private users: UsersRepo) {}
+  @Get() list() { this.prisma.user.findMany(); this.users.findOne({}); this.users.custom(); publish(); }
+}`,
+    "src/kafka.ts": `import { Kafka } from "kafkajs";
+const producer = new Kafka({}).producer();
+export async function publish() { await producer.send({ topic: "t", messages: [] }); }`,
+  });
+  const map = extractTypeScript(root);
+  expect(validateDataMap(map)).toEqual([]);
+  expect(map.edges.filter((e) => e.kind === "sync")).toEqual([
+    { from: "app:AController", to: "app:UsersRepo", kind: "sync", rule: "di-call" },
+    { from: "app:AController", to: "app:src/kafka.ts#publish", kind: "sync", rule: "fn-call" },
+  ]);
+  expect(map.edges).toContainEqual({ from: "app:AController", to: "database:prisma", kind: "io", rule: "prisma-model" });
+});
+
+test("async links need a compatible transport, and a topic passed to a wrapper links from the caller", () => {
+  const root = repo({
+    "src/main.ts": `import { NestFactory } from "@nestjs/core";
+import { Transport } from "@nestjs/microservices";
+async function boot() { await NestFactory.createMicroservice(M, { transport: Transport.NATS }); }`,
+    "src/topics.ts": `export const TOPICS = { DONE: "job.done" } as const;`,
+    "src/consumer.ts": `import { Controller } from "@nestjs/common";
+import { EventPattern } from "@nestjs/microservices";
+@Controller()
+export class NatsConsumer { @EventPattern("job.done") done() {} @EventPattern("job.mqtt") m() {} }`,
+    "src/producer.service.ts": `import { Inject } from "@nestjs/common";
+import { ClientProxy, ClientProxyFactory, Transport } from "@nestjs/microservices";
+export class ProducerService {
+  private client = ClientProxyFactory.create({ transport: Transport.NATS });
+  private mqtt: ClientProxy;
+  constructor() { this.mqtt = ClientProxyFactory.create({ transport: Transport.MQTT }); }
+  emitMessage(topic: string, msg: unknown) { return this.client.emit(topic, msg); }
+  other() { this.mqtt.emit("job.mqtt", {}); }
+}`,
+    "src/caller.service.ts": `import { ProducerService } from "./producer.service";
+import { TOPICS } from "./topics";
+export class CallerService {
+  constructor(private producer: ProducerService) {}
+  run() { this.producer.emitMessage(TOPICS.DONE, {}); }
+}`,
+  });
+  const map = extractTypeScript(root);
+  expect(validateDataMap(map)).toEqual([]);
+  expect(map.edges.filter((e) => e.kind === "async")).toEqual([
+    { from: "app:CallerService", to: "app:NatsConsumer", kind: "async", queue: "job.done", rule: "nest-client-proxy-via-wrapper" },
+  ]);
+  expect(map.edges).toContainEqual({ from: "app:ProducerService", to: "message-out:mqtt", kind: "io", rule: "nest-client-proxy" });
+});
