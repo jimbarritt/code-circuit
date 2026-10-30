@@ -56,8 +56,14 @@ Import resolution: `project.resolveImport(fromRel, specifier)` returns a file pa
 `buildIndex(project): SymbolIndex` lists every class and every top-level function, with decorators, constructor dependencies, methods and the calls made inside each method.
 
 - A constructor parameter with a type reference, or `@Inject(TOKEN)`, or `@InjectRepository(Entity)`, or `@InjectModel(Name)`, or `@InjectQueue(name)` is a dependency. The index records the parameter name, the type name, the token text, and the class it resolves to when the class is in the repo.
-- `this.<dep>.<method>(...)` inside a method is a call. The index records the dependency, the method and the line.
-- `resolveValue(expr, fileRel)` folds an expression to a string when it can: string literals, no-substitution templates, templates whose parts fold, `+` of folded parts, `const` identifiers in the same file or imported from another file, enum members, and property access on a `const` object literal (`TOPICS.USER_CREATED`), including `as const`.
+- A class property with an inject decorator, such as `@Inject(X) private x: X`, is a dependency too.
+- `this.<dep>.<method>(...)` and `this['<dep>'].<method>(...)` inside a method are calls. The index records the dependency, the method and the line.
+- A call to a top-level function of the repo, in the same file or imported, is a function call (`fnCalls`), in methods and in functions.
+- Class ids are `<module>:<ClassName>`. When two classes in one module have the same name, the second and later ones are `<module>:<ClassName>@<file>`.
+- `base` is the id of the class a class extends, when it is in the repo. `allMethods` and `allDeps` give the own and inherited methods and dependencies; a member of a subclass hides one of the same name in a base class.
+- Nest custom providers `{ provide: X, useClass: Y }` and `{ provide: X, useExisting: Y }` are bindings from X (a class, or a folded token) to Y. A dependency on X with one binding resolves to Y.
+- Decorators are matched by the name they are exported under and the package they come from. The index follows aliased imports (`Get as G`), namespace imports (`common.Get`) and local re-exports to find them.
+- `resolveValue(expr, fileRel)` folds an expression to a string when it can: string literals, no-substitution templates, templates whose parts fold, `+` of folded parts, `const` identifiers in the same file or imported from another file, `export default` values, enum members (also those that name earlier members), and property access on a `const` object literal (`TOPICS.USER_CREATED`), including `as const` and computed string keys.
 
 ## Findings
 
@@ -75,6 +81,12 @@ Detectors return `Finding` objects. `types.ts` holds the exact type. The fields:
 | `symbol` | owner, for example `UserController.getInfo` or `handleUser` |
 | `node` | id of the node that owns the finding |
 | `rule` | the detector rule, for example `nest-http-decorator` |
+
+Entry targets of schedules: a cron expression as written, `every <n>ms` for an interval and `after <n>ms` for a timeout. A WebSocket target is `/<namespace> <message>` when the gateway has a namespace.
+
+Owners of entries: a handler method owns its decorator finding, also when it is inherited from a base class. Then the finding has the file and line of the base class method, and the node and module of the subclass. A named function passed as a handler owns the finding: a bullmq `Worker` processor, or the `eachMessage` or `eachBatch` of a kafkajs consumer's `run`.
+
+One exception to the rule on unresolved values: a Redis or NATS `subscribe` whose channel does not fold makes no finding, because `subscribe` is also an RxJS method and the noise would be large.
 
 Node ids: `<module>:<ClassName>` for a class, `<module>:<file>#<functionName>` for a function, `<module>:<file>` for code at the top level of a file.
 

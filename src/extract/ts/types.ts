@@ -29,8 +29,12 @@ export interface Project {
 }
 
 export interface Decorator {
-  /** Decorator name, for example "Controller" or "GrpcMethod". */
+  /** Decorator name, for example "Controller" or "GrpcMethod": the exported name when the import is aliased or a namespace. */
   name: string;
+  /** Callee as written when it differs from `name`, for example "G" or "common.Get". */
+  local?: string;
+  /** Package the decorator comes from, after aliases, namespaces and local re-exports. Set by buildIndex. */
+  spec?: string;
   args: ts.Expression[];
   line: number;
 }
@@ -56,12 +60,20 @@ export interface Call {
   node: ts.CallExpression;
 }
 
+/** A call to a top-level function in the repo: `publishSignup(id)`. */
+export interface FnCall {
+  /** Function node id. */
+  fn: string;
+  line: number;
+}
+
 export interface MethodSym {
   name: string;
   line: number;
   decorators: Decorator[];
   node: ts.MethodDeclaration | ts.PropertyDeclaration;
   calls: Call[];
+  fnCalls?: FnCall[];
 }
 
 export interface ClassSym {
@@ -75,6 +87,9 @@ export interface ClassSym {
   deps: Dependency[];
   methods: MethodSym[];
   extends?: string;
+  /** Id of the base class, when it is in the repo. */
+  base?: string;
+  abstract?: boolean;
   node: ts.ClassDeclaration;
 }
 
@@ -86,6 +101,7 @@ export interface FunctionSym {
   file: string;
   line: number;
   node: ts.FunctionDeclaration | ts.VariableDeclaration;
+  fnCalls?: FnCall[];
 }
 
 export interface SymbolIndex {
@@ -94,6 +110,8 @@ export interface SymbolIndex {
   classById: Map<string, ClassSym>;
   /** Classes by name; a name can occur in more than one module. */
   classesByName: Map<string, ClassSym[]>;
+  /** Nest custom providers: the class or token id given to `provide`, to the class ids of `useClass` or `useExisting`. */
+  bindings?: Map<string, string[]>;
   /** Folds an expression to a string; undefined when it cannot. */
   resolveValue(expr: ts.Expression, fileRel: string): string | undefined;
   /** Id of the node that owns a position: the enclosing class, else function, else `<module>:<file>`. */

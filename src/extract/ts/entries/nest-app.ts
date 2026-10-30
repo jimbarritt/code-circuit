@@ -2,17 +2,23 @@ import ts from "typescript";
 import type { DetectContext } from "../types.ts";
 import { calleeName, fold, prop, unwrap, walk } from "./util.ts";
 
+type Val = { value: string; resolved: boolean };
+const APP_TYPES = new Set(["INestApplication", "NestExpressApplication", "NestFastifyApplication"]);
+
 export interface NestApp {
   prefix?: { value: string; resolved: boolean };
   /** Set when the app enables URI versioning. */
-  versioning?: { prefix: string; defaultVersion?: string[] };
+  versioning?: { prefix: string; defaultVersion?: Val[] };
   /** Transports of the microservices the app listens on, for example KAFKA or GRPC. */
   transports: string[];
 }
 
 const cache = new WeakMap<DetectContext["project"], Map<string, NestApp>>();
 
-/** Reads setGlobalPrefix, enableVersioning and the microservice transports of each module's bootstrap code. */
+/**
+ * Reads setGlobalPrefix, enableVersioning and the microservice transports of each module's bootstrap code:
+ * files that use NestFactory, or that type a value as a Nest application, as a bootstrap helper does.
+ */
 export function nestApps(ctx: DetectContext): Map<string, NestApp> {
   const hit = cache.get(ctx.project);
   if (hit) return hit;
@@ -20,7 +26,10 @@ export function nestApps(ctx: DetectContext): Map<string, NestApp> {
   const app = (m: string) => { let a = out.get(m); if (!a) out.set(m, (a = { transports: [] })); return a; };
   for (const f of ctx.project.files) {
     let boot = false;
-    walk(f.sf, (n) => { if (ts.isPropertyAccessExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === "NestFactory") boot = true; });
+    walk(f.sf, (n) => {
+      if (ts.isPropertyAccessExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === "NestFactory") boot = true;
+      if (ts.isTypeReferenceNode(n) && ts.isIdentifier(n.typeName) && APP_TYPES.has(n.typeName.text)) boot = true;
+    });
     if (!boot) continue;
     walk(f.sf, (n) => {
       if (ts.isCallExpression(n)) {
@@ -51,13 +60,12 @@ export function nestApps(ctx: DetectContext): Map<string, NestApp> {
   return out;
 }
 
-/** Versions in a @Version argument or a version option: a literal, an array, or VERSION_NEUTRAL as "". */
-export function versions(ctx: DetectContext, expr: ts.Expression, file: string): string[] {
+/** Versions in a @Version argument or a version option: a literal, an array, or VERSION_NEUTRAL as "". Unresolved text stays. */
+export function versions(ctx: DetectContext, expr: ts.Expression, file: string): Val[] {
   const e = unwrap(expr);
   if (ts.isArrayLiteralExpression(e)) return e.elements.flatMap((x) => versions(ctx, x, file));
-  if (ts.isIdentifier(e) && e.text === "VERSION_NEUTRAL") return [""];
-  const v = ctx.index.resolveValue(e, file);
-  return v === undefined ? [] : [v];
+  if (ts.isIdentifier(e) && e.text === "VERSION_NEUTRAL") return [{ value: "", resolved: true }];
+  return [fold(ctx, e, file, e.getSourceFile())];
 }
 
 const METHODS: Record<string, string> = { KAFKA: "KAFKA", RMQ: "RMQ", NATS: "NATS", MQTT: "MQTT", REDIS: "REDIS", TCP: "TCP" };

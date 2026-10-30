@@ -58,7 +58,8 @@ function scanFile(ctx: DetectContext, f: SourceFile): FileState {
     const fw = root && fwOf(root);
     if (!fw) return undefined;
     const name = calleeName(e);
-    if (fw === "express" && (name === "Router" || (ts.isIdentifier(c) && imps.get(root!)?.imported !== "Router" && ts.isCallExpression(e)))) return { fw, own: empty };
+    const imported = ts.isIdentifier(c) ? imps.get(root!)?.imported : name;
+    if (fw === "express" && (imported === "Router" || (ts.isIdentifier(c) && ts.isCallExpression(e)))) return { fw, own: empty };
     if (fw === "fastify" && ts.isIdentifier(c) && ts.isCallExpression(e)) return { fw, own: empty };
     if (fw === "koa" && ts.isNewExpression(e)) {
       const o = e.arguments?.[0] && unwrap(e.arguments[0]);
@@ -83,7 +84,7 @@ function scanFile(ctx: DetectContext, f: SourceFile): FileState {
 
 interface Route { inst: Inst; f: SourceFile; at: ts.Node; method: string; path: Val; handler?: ts.Expression; rule: string }
 
-function analyse(ctx: DetectContext): { routes: Route[]; prefixes: (inst: Inst) => Val[] } {
+function analyse(ctx: DetectContext): { routes: Route[]; prefixes: (inst: Inst) => Val[] | undefined } {
   const files = new Map<string, FileState>();
   const state = (rel: string) => {
     let s = files.get(rel);
@@ -166,24 +167,31 @@ function analyse(ctx: DetectContext): { routes: Route[]; prefixes: (inst: Inst) 
     });
   }
 
+  // A mount that closes a cycle is dropped. Results computed inside a cycle are not kept, as they depend on where the walk started.
   const memo = new Map<string, Val[]>();
-  const prefixes = (inst: Inst, seen = new Set<string>()): Val[] => {
+  const prefixes = (inst: Inst, seen: string[] = []): Val[] | undefined => {
     const hit = memo.get(inst.key);
     if (hit) return hit;
-    if (seen.has(inst.key)) return [inst.own];
-    seen.add(inst.key);
+    if (seen.includes(inst.key)) { cut = Math.min(cut, seen.indexOf(inst.key)); return undefined; }
+    const depth = seen.length;
+    seen = [...seen, inst.key];
     const ms = mounts.get(inst.key) ?? [];
     const out: Val[] = [];
+    let mounted = false;
     for (const m of ms) {
       const parent = insts.get(m.parent);
-      for (const pp of parent ? prefixes(parent, seen) : [{ value: "", resolved: true }]) {
-        out.push({ value: joinPath(pp.value, m.path.value, inst.own.value), resolved: pp.resolved && m.path.resolved && inst.own.resolved });
-      }
+      const pps = parent ? prefixes(parent, seen) : [{ value: "", resolved: true }];
+      if (!pps) continue;
+      mounted = true;
+      for (const pp of pps) out.push({ value: joinPath(pp.value, m.path.value, inst.own.value), resolved: pp.resolved && m.path.resolved && inst.own.resolved });
     }
+    if (ms.length && !mounted) return undefined;
     const res = out.length ? [...new Map(out.map((v) => [v.value, v])).values()] : [inst.own];
-    memo.set(inst.key, res);
+    if (cut >= depth) cut = Infinity;
+    if (cut === Infinity) memo.set(inst.key, res);
     return res;
   };
+  let cut = Infinity;
   return { routes, prefixes };
 }
 
@@ -196,7 +204,7 @@ function routesFor(ctx: DetectContext, fw: Framework): Finding[] {
   for (const r of a.routes) {
     if (r.inst.fw !== fw) continue;
     const owner = handlerOwner(ctx, r.f, r.handler, r.at);
-    for (const pre of a.prefixes(r.inst)) {
+    for (const pre of a.prefixes(r.inst) ?? [r.inst.own]) {
       out.push(finding(ctx, r.f, r.at, { kind: "http", protocol: fw, method: r.method, rule: r.rule }, { value: joinPath(pre.value, r.path.value), resolved: pre.resolved && r.path.resolved }, owner));
     }
   }

@@ -1,4 +1,5 @@
 import ts from "typescript";
+import { allMethods } from "../symbols.ts";
 import type { ClassSym, DetectContext, Decorator, EntryKind, Finding, SourceFile } from "../types.ts";
 
 export const lineOf = (sf: ts.SourceFile, node: ts.Node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
@@ -59,6 +60,8 @@ export const NEST = /^@nestjs\//;
 /** The decorator is the named one and, when it is imported, comes from a module that passes `test`. */
 export function isDecorator(d: Decorator, names: string | string[], sf: ts.SourceFile, test: SpecTest = NEST): boolean {
   if (!(typeof names === "string" ? d.name === names : names.includes(d.name))) return false;
+  if (d.spec !== undefined) return specMatches(d.spec, test);
+  if (d.local) return false;
   const imp = importsOf(sf).get(d.name);
   return !!imp && specMatches(imp.spec, test);
 }
@@ -83,18 +86,29 @@ export function walk(node: ts.Node, visit: (n: ts.Node) => void) {
 
 export interface Base { kind: EntryKind; protocol: string; method: string; rule: string; detail?: string }
 
-export function finding(ctx: DetectContext, f: SourceFile, at: ts.Node | number, base: Base, target: { value: string; resolved: boolean }, owner?: { id: string; symbol: string }): Finding {
+export function finding(ctx: DetectContext, f: SourceFile, at: ts.Node | number, base: Base, target: { value: string; resolved: boolean }, owner?: { id: string; symbol: string; module?: string }): Finding {
   const o = owner ?? ctx.index.ownerOf(f.rel, typeof at === "number" ? f.sf : at);
   const out: Finding = {
     direction: "entry", kind: base.kind, protocol: base.protocol, method: base.method, target: target.value, resolved: target.resolved,
-    module: f.module, file: f.rel, line: typeof at === "number" ? at : lineOf(f.sf, at), symbol: o.symbol, node: o.id, rule: base.rule,
+    module: owner?.module ?? f.module, file: f.rel, line: typeof at === "number" ? at : lineOf(f.sf, at), symbol: o.symbol, node: o.id, rule: base.rule,
   };
   if (base.detail) out.detail = base.detail;
   return out;
 }
 
 /** Owner for a decorated class method. */
-export const methodOwner = (c: ClassSym, method?: string) => ({ id: c.id, symbol: method ? `${c.name}.${method}` : c.name });
+export const methodOwner = (c: ClassSym, method?: string) => ({ id: c.id, symbol: method ? `${c.name}.${method}` : c.name, module: c.module });
+
+const bases = new WeakMap<DetectContext["index"], Set<string>>();
+/** A base class with no class decorator, or an abstract one: its handlers are reported under each subclass. */
+export function baseOnly(ctx: DetectContext, c: ClassSym): boolean {
+  let b = bases.get(ctx.index);
+  if (!b) bases.set(ctx.index, (b = new Set(ctx.index.classes.flatMap((x) => (x.base ? [x.base] : [])))));
+  return b.has(c.id) && (!!c.abstract || !c.decorators.length);
+}
+
+/** Own and inherited methods of a class, each with the source file that declares it. */
+export const handlers = (ctx: DetectContext, c: ClassSym) => allMethods(ctx.index, c).map(({ m, cls }) => ({ m, f: fileOf(ctx, cls), file: cls.file }));
 
 export const fileOf = (ctx: DetectContext, c: ClassSym) => ctx.project.file(c.file)!;
 

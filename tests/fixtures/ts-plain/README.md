@@ -26,7 +26,7 @@ A repo with no workspaces. The root `package.json` has no `workspaces` field. It
 `EXPECTED.json` holds the ground truth: `modules`, `entries`, `exits` and `links`. The fields follow `docs/typescript-extractor.md`. These rules apply:
 
 - `line` is the line where the call starts.
-- The `symbol` of a route, consumer or schedule with a named handler is the handler name. Where the handler is not named, as in kafkajs `subscribe` and the SQS poller, it is the enclosing function.
+- The `symbol` of a route, consumer or schedule with a named handler is the handler name. A kafkajs `subscribe` is owned by the function passed as `eachMessage` to the same consumer's `run`. Where the handler is not named, as in the SQS poller, it is the enclosing function.
 - The `symbol` of an exit is the enclosing function.
 - An unresolved `target` is the exact source text of the expression.
 - An amqplib `publish` target is `<exchange>/<routing key>`.

@@ -72,7 +72,7 @@
       "kind": "cron",
       "protocol": "interval",
       "method": "CRON",
-      "target": "30000",
+      "target": "every 30000ms",
       "resolved": true,
       "module": "@shop/inventory-svc",
       "file": "services/inventory-svc/src/restock.job.ts",
@@ -89,7 +89,7 @@
       "module": "@shop/mailer-worker",
       "file": "services/mailer-worker/src/digest.worker.ts",
       "line": 16,
-      "symbol": "startDigestWorker"
+      "symbol": "processDigest"
     },
     {
       "direction": "entry",
@@ -192,7 +192,7 @@
       "kind": "websocket",
       "protocol": "ws",
       "method": "WS",
-      "target": "order.track",
+      "target": "/orders order.track",
       "resolved": true,
       "module": "@shop/orders-api",
       "file": "services/orders-api/src/orders/orders.gateway.ts",
@@ -204,7 +204,7 @@
       "kind": "websocket",
       "protocol": "ws",
       "method": "WS",
-      "target": "stock.check",
+      "target": "/orders stock.check",
       "resolved": true,
       "module": "@shop/orders-api",
       "file": "services/orders-api/src/orders/orders.gateway.ts",
@@ -569,7 +569,7 @@
     },
     {
       "from_symbol": "scheduleDigest",
-      "to_symbol": "startDigestWorker",
+      "to_symbol": "processDigest",
       "via": "digests",
       "kind": "async",
       "protocol": "bullmq"

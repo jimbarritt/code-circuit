@@ -1,6 +1,6 @@
 import ts from "typescript";
 import type { Detector, Finding } from "../types.ts";
-import { calleeName, fileOf, finding, fold, handlerOwner, importedFrom, isDecorator, methodOwner, pathValues, walk } from "./util.ts";
+import { calleeName, fileOf, finding, fold, handlerOwner, handlers as methodsOf, importedFrom, isDecorator, methodOwner, pathValues, walk } from "./util.ts";
 
 const NEST_QUEUE = (s: string) => s === "@nestjs/bullmq" || s === "@nestjs/bull";
 
@@ -16,13 +16,13 @@ export const queue: Detector = {
       const protocol = importedFrom(f.sf, "Processor", "@nestjs/bull") ? "bull" : "bullmq";
       const base = { kind: "queue" as const, protocol, method: "QUEUE" };
       for (const name of pathValues(ctx, p.args[0], c.file, f.sf, "name")) {
-        const handlers = c.methods.flatMap((m) => m.decorators.filter((d) => isDecorator(d, "Process", f.sf, NEST_QUEUE)).map((d) => ({ m, d })));
-        for (const { m, d } of handlers) {
-          const job = d.args[0] && ctx.index.resolveValue(d.args[0], c.file);
-          out.push(finding(ctx, f, d.line, { ...base, rule: "nest-queue-process", ...(job ? { detail: `job: ${job}` } : {}) }, name, methodOwner(c, m.name)));
+        const handlers = methodsOf(ctx, c).flatMap(({ m, f: mf, file }) => m.decorators.filter((d) => isDecorator(d, "Process", mf.sf, NEST_QUEUE)).map((d) => ({ m, d, mf, file })));
+        for (const { m, d, mf, file } of handlers) {
+          const job = d.args[0] && ctx.index.resolveValue(d.args[0], file);
+          out.push(finding(ctx, mf, d.line, { ...base, rule: "nest-queue-process", ...(job ? { detail: `job: ${job}` } : {}) }, name, methodOwner(c, m.name)));
         }
         if (handlers.length) continue;
-        const proc = c.methods.find((m) => m.name === "process");
+        const proc = methodsOf(ctx, c).find(({ m }) => m.name === "process")?.m;
         out.push(finding(ctx, f, p.line, { ...base, rule: "nest-queue-processor" }, name, methodOwner(c, proc?.name)));
       }
     }
@@ -33,8 +33,7 @@ export const queue: Detector = {
         const name = calleeName(n);
         if (!name || !ts.isIdentifier(n.expression) || !n.arguments?.[0]) return;
         if (ts.isNewExpression(n) && name === "Worker" && importedFrom(f.sf, name, "bullmq")) {
-          let owner = ctx.index.ownerOf(f.rel, n);
-          if (owner.id.endsWith(`:${f.rel}`)) owner = handlerOwner(ctx, f, n.arguments[1], n);
+          const owner = handlerOwner(ctx, f, n.arguments[1], n);
           out.push(finding(ctx, f, n, { kind: "queue", protocol: "bullmq", method: "QUEUE", rule: "bullmq-worker" }, fold(ctx, n.arguments[0], f.rel, f.sf), owner));
         } else if (importedFrom(f.sf, name, "bull") && ts.isVariableDeclaration(n.parent) && ts.isIdentifier(n.parent.name)) {
           bullQueues.set(n.parent.name.text, n.arguments[0]);

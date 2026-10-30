@@ -44,7 +44,7 @@ for (const name of ["ts-shop", "ts-plain"]) {
 
 test("a named handler owns its route, even when imported from another file", () => {
   const found = entries(join(import.meta.dir, "fixtures", "ts-plain"));
-  expect(found.find((f) => f.target === "10000")?.node).toMatch(/:jobs\/src\/outbox\.ts#pollOutbox$/);
+  expect(found.find((f) => f.target === "every 10000ms")?.node).toMatch(/:jobs\/src\/outbox\.ts#pollOutbox$/);
   expect(found.find((f) => f.target === "/users/search")?.node).toMatch(/:gateway\/src\/routes\/users\.ts#searchUsers$/);
 });
 
@@ -218,8 +218,8 @@ cron.schedule('0 1 * * *', () => {});
 function nightly() {}`,
   });
   expect(short(entries(root))).toEqual([
-    "CRON * * * * * src/sched.ts", "CRON 0 0 * * * nightly", "CRON 0 1 * * * src/sched.ts", "CRON 1000 S.onModuleInit",
-    "CRON 5000 S.boot", "CRON CronExpression.EVERY_HOUR ? S.hourly", "NATS orders.* go", "QUEUE audio AudioConsumer.other",
+    "CRON * * * * * src/sched.ts", "CRON 0 0 * * * nightly", "CRON 0 1 * * * src/sched.ts", "CRON CronExpression.EVERY_HOUR ? S.hourly",
+    "CRON after 5000ms S.boot", "CRON every 1000ms S.onModuleInit", "NATS orders.* go", "QUEUE audio AudioConsumer.other",
     "QUEUE audio AudioConsumer.transcode", "QUEUE https://q/1 onMsg", "QUEUE top run", "QUEUE video encode",
     "REDIS music src/redis.ts", "REDIS news src/redis.ts", "REDIS user:* src/redis.ts",
   ]);
@@ -243,4 +243,117 @@ test.skipIf(!existsSync(EXAMPLE))("the nest-turbo-starter example: HTTP routes u
   expect(found.filter((f) => f.kind === "http").length).toBe(12);
   expect(found.filter((f) => f.kind === "grpc").length).toBe(7);
   expect(found.every((f) => f.resolved)).toBe(true);
+});
+
+test("Nest decorators imported under an alias, through a namespace or through a local re-export", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/http.ts": "export { Get as HttpGet, Controller } from '@nestjs/common';",
+    "src/a.controller.ts": `import { Controller, Get as G } from '@nestjs/common';
+import * as common from '@nestjs/common';
+import { HttpGet } from './http';
+@Controller('users')
+export class A {
+  @G('me') me() {}
+  @common.Post('ns') ns() {}
+  @HttpGet('barrel') barrel() {}
+}`,
+    "src/b.controller.ts": `import { Controller, Get } from '@nestjs/common';
+import * as mine from './my-decorators';
+@Controller('b')
+export class B { @mine.Get('no') no() {} }`,
+  });
+  expect(short(entries(root))).toEqual(["GET /users/barrel A.barrel", "GET /users/me A.me", "POST /users/ns A.ns"]);
+});
+
+test("handlers inherited from a base class are reported under each subclass", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/base.ts": `import { Get, Post } from '@nestjs/common';
+import { EventPattern } from '@nestjs/microservices';
+import { Cron } from '@nestjs/schedule';
+export abstract class BaseCrud {
+  @Get('list') list() {}
+  @Post() create() {}
+  @EventPattern('crud.changed') changed() {}
+  @Cron('0 * * * *') tick() {}
+}`,
+    "src/users.controller.ts": `import { Controller, Post } from '@nestjs/common';
+import { BaseCrud } from './base';
+@Controller('users')
+export class UsersController extends BaseCrud { @Post('own') create() {} }`,
+    "src/health.controller.ts": `import { Controller } from '@nestjs/common';
+import { BaseCrud } from './base';
+@Controller('_health')
+export class HealthController extends BaseCrud {}`,
+  });
+  const found = entries(root);
+  expect(short(found)).toEqual([
+    "CRON 0 * * * * HealthController.tick", "CRON 0 * * * * UsersController.tick",
+    "GET /_health/list HealthController.list", "GET /users/list UsersController.list",
+    "MESSAGE crud.changed HealthController.changed", "MESSAGE crud.changed UsersController.changed",
+    "POST /_health HealthController.create", "POST /users/own UsersController.create",
+  ]);
+  expect(found.find((f) => f.target === "/users/list")).toMatchObject({ node: "app:UsersController", file: "src/base.ts", module: "app" });
+});
+
+test("Sse handlers, GraphQL operations without @Resolver, and a global prefix set in a bootstrap helper", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/app.common.ts": `import { INestApplication } from '@nestjs/common';
+export function configure(app: INestApplication) { app.setGlobalPrefix('api'); }`,
+    "src/a.controller.ts": `import { Controller, Sse, Get, Version } from '@nestjs/common';
+@Controller('a')
+export class A {
+  @Sse('events') events() {}
+}`,
+    "src/git.resolver.ts": `import { Query, Mutation } from '@nestjs/graphql';
+export class GitResolver {
+  @Query() repos() {}
+  @Mutation() connect() {}
+}`,
+  });
+  expect(short(entries(root))).toEqual(["GET /api/a/events A.events", "GRAPHQL Mutation.connect GitResolver.connect", "GRAPHQL Query.repos GitResolver.repos"]);
+});
+
+test("an unresolved @Version stays in the target, unresolved", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/main.ts": `import { NestFactory } from '@nestjs/core';
+async function bootstrap() { const app = await NestFactory.create(M); app.enableVersioning(); }`,
+    "src/a.controller.ts": `import { Controller, Get, Version } from '@nestjs/common';
+@Controller('a')
+export class A { @Version(config.v) @Get('x') x() {} }`,
+  });
+  expect(short(entries(root))).toEqual(["GET /vconfig.v/a/x ? A.x"]);
+});
+
+test("express: an aliased Router import, and routers that mount each other", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/app.ts": `import express, { Router as R } from 'express';
+const app = express();
+const api = R();
+const admin = R();
+api.get('/users/:id', (req, res) => {});
+admin.post('/x', (req, res) => {});
+api.use('/admin', admin);
+admin.use('/back', api);
+app.use('/api', api);`,
+  });
+  expect(short(entries(root))).toEqual(["GET /api/users/:id src/app.ts", "POST /api/admin/x src/app.ts"]);
+});
+
+test("a kafkajs subscription is owned by the eachMessage handler of the same consumer", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/k.ts": `import { Kafka } from 'kafkajs';
+const consumer = new Kafka({}).consumer({ groupId: 'g' });
+export async function start() {
+  await consumer.subscribe({ topic: 'a' });
+  await consumer.run({ eachMessage: onMessage });
+}
+async function onMessage() {}`,
+  });
+  expect(short(entries(root))).toEqual(["KAFKA a onMessage"]);
 });

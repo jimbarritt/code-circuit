@@ -150,6 +150,55 @@ const o = 42;
   });
 });
 
+test("resolveValue folds default exports, computed keys and enum members that name earlier members", () => {
+  const { project, index } = load({
+    "src/consts.ts": "export default 'dflt';",
+    "src/named.ts": "const NAME = 'named';\nexport default NAME;",
+    "src/enums.ts": "export enum Num { X = 1, Y, Z = X + 5, S = 'a' + 'b' }\nexport const OBJ = { ['k']: 'v' };",
+    "src/use.ts": `import D from './consts';
+import N from './named';
+import { Num, OBJ } from './enums';
+const a = D;
+const b = N;
+const c = Num.Z;
+const d = Num.S;
+const e = OBJ.k;
+`,
+  });
+  const got = Object.fromEntries("abcde".split("").map((n) => [n, index.resolveValue(init(project, "src/use.ts", n), "src/use.ts")]));
+  expect(got).toEqual({ a: "dflt", b: "named", c: "6", d: "ab", e: "v" });
+});
+
+test("same-named classes in one module get distinct ids, and base classes, bindings and function calls are indexed", () => {
+  const { index } = load({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/a/x.controller.ts": "export class XController {}",
+    "src/b/x.controller.ts": "export class XController {}",
+    "src/mail.ts": `export abstract class AbstractMail {}
+export class SmtpMail extends AbstractMail {}
+export class EmailService {
+  constructor(private mail: AbstractMail, @Inject('CACHE') private cache: unknown) {}
+  @Inject(SmtpMail) private direct: SmtpMail;
+  @Inject(SmtpMail) private untyped;
+  send() { this['mail'].send(); helper(); }
+}
+export const MODULE = { providers: [{ provide: AbstractMail, useClass: SmtpMail }, { provide: 'CACHE', useExisting: SmtpMail }] };
+function helper() { other(); }
+const other = () => 1;`,
+  });
+  expect(index.classes.filter((c) => c.name === "XController").map((c) => c.id)).toEqual(["app:XController", "app:XController@src/b/x.controller.ts"]);
+  expect(index.classById.get("app:XController@src/b/x.controller.ts")?.file).toBe("src/b/x.controller.ts");
+  const smtp = index.classById.get("app:SmtpMail")!;
+  expect(smtp.base).toBe("app:AbstractMail");
+  expect(index.classById.get("app:AbstractMail")?.abstract).toBe(true);
+  const svc = index.classById.get("app:EmailService")!;
+  expect(svc.deps.map((d) => `${d.param}=${d.classId}`)).toEqual(["mail=app:SmtpMail", "cache=app:SmtpMail", "direct=app:SmtpMail", "untyped=app:SmtpMail"]);
+  const send = svc.methods.find((m) => m.name === "send")!;
+  expect(send.calls.map((c) => `${c.dep}.${c.method}`)).toEqual(["mail.send"]);
+  expect(send.fnCalls?.map((c) => c.fn)).toEqual(["app:src/mail.ts#helper"]);
+  expect(index.functions.find((f) => f.name === "helper")?.fnCalls?.map((c) => c.fn)).toEqual(["app:src/mail.ts#other"]);
+});
+
 const EXAMPLE = "/home/user/examples/nest-turbo-starter";
 
 test.skipIf(!existsSync(EXAMPLE))("the nest-turbo-starter example folds gRPC service names through barrel files", () => {
