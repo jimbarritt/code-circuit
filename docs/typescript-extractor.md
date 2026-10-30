@@ -73,7 +73,7 @@ Detectors return `Finding` objects. `types.ts` holds the exact type. The fields:
 |---|---|
 | `direction` | `entry` or `exit` |
 | `kind` | entry: `http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`. exit: `database`, `cache`, `http-out`, `grpc-out`, `message-out`, `queue-out`, `cloud` |
-| `protocol` | the library or transport, for example `nest`, `express`, `kafka`, `rmq`, `nats`, `bullmq`, `typeorm`, `prisma`, `axios`, `aws-ses` |
+| `protocol` | the library or transport, for example `nest`, `express`, `kafka`, `rmq`, `nats`, `bullmq`, `typeorm`, `prisma`, `kysely`, `axios`, `octokit`, `aws-ses` |
 | `method` | entry: HTTP verb, or `GRPC`, `GRAPHQL`, `KAFKA`, `RMQ`, `NATS`, `MQTT`, `REDIS`, `TCP`, `MESSAGE`, `QUEUE`, `CRON`, `WS`. exit: the operation, such as `find`, `persist`, `send`, `emit`, `get`, `POST` |
 | `target` | entry: HTTP path with prefixes, `Service/Method`, topic or pattern, queue name, schedule. exit: entity or table, topic, queue, URL or host, `Service/Method`, cloud service and operation |
 | `resolved` | `true` when `target` is a folded literal |
@@ -81,6 +81,8 @@ Detectors return `Finding` objects. `types.ts` holds the exact type. The fields:
 | `symbol` | owner, for example `UserController.getInfo` or `handleUser` |
 | `node` | id of the node that owns the finding |
 | `rule` | the detector rule, for example `nest-http-decorator` |
+
+Exit targets of note: MikroORM `flush` writes the unit of work, so its target is `(unit of work)`. A `persist` or `remove` target is the entity when the argument is `new Entity()`, `repo.create(...)` or `em.create(Entity, ...)`, directly or through a local. A `PrismaClient` imported from a path with `prisma` in it, or from a relative path that is not in the repo, is a generated Prisma client.
 
 Entry targets of schedules: a cron expression as written, `every <n>ms` for an interval and `after <n>ms` for a timeout. A WebSocket target is `/<namespace> <message>` when the gateway has a namespace.
 
@@ -97,11 +99,17 @@ Node ids: `<module>:<ClassName>` for a class, `<module>:<file>#<functionName>` f
 - One endpoint per entry finding. `method` is the finding method. `path` is the target. `entry` is the node. Extra fields: `kind`, `protocol`, `module`, `file`, `line`.
 - Nodes: every class and function that owns a finding, and every class reached from those by an index call. Kinds: `controller`, `resolver`, `consumer`, `worker`, `gateway`, `service`, `repository`, `client`, `function`. Extra field: `module`.
 - `sync` edges: index calls between nodes, with rule `di-call`. Only calls made in method bodies count. An injected dependency that is never called makes no edge.
-- `async` edges: a `message-out` or `queue-out` finding whose target matches a `message` or `queue` entry in the repo links the producer node to the consumer node, with `queue` set to the topic or queue name.
+  - Inherited methods and dependencies count as the subclass's own. When a base class owns findings, the subclass links to it with rule `extends`.
+  - A dependency on a class with provider bindings links to each bound class. A dependency on an abstract class with no binding links to each subclass in the repo.
+  - A call to a class that extends an ORM client (`PrismaClient`, `EntityRepository`, `Repository`, `Kysely`) makes no edge when no class of the repo declares the method: the call is an exit of the caller.
+  - Calls to loggers (class names that end in `Logger`, `LoggerService`, `LoggingService` or `LoggingRepository`) make no edge.
+- `sync` edges with rule `fn-call`: a call to a top-level function that owns a finding.
+- `async` edges: a `message-out` or `queue-out` finding whose target matches a `message` or `queue` entry in the repo links the producer node to the consumer node, with `queue` set to the topic or queue name. The protocols must be compatible: the same transport (Kafka with Kafka, RabbitMQ with RabbitMQ), or a `nest` entry or exit, which stands for any transport. When consumers in the producer's module match, only those link.
+- Producers behind a wrapper: when an unresolved `message-out` or `queue-out` target names a parameter of its method, as in `emitMessage(topic, msg)`, each call of that method whose argument folds links the caller to the matching consumers. The rule is the exit rule with `-via-wrapper`.
 - A `grpc-out` finding whose `Service/Method` matches a `grpc` entry in the repo links the client node to the handler node with a `sync` edge, rule `grpc-call`.
 - `io` edges: every other exit finding links its node to an external. One external per kind and protocol, for example `database:mikro-orm` named `Database (MikroORM)`, `message-out:kafka` named `Kafka`, `cloud:aws-ses` named `AWS SES`.
 - A `survey` section: `{ modules, entries, exits }`, where `entries` and `exits` are the findings sorted by module, file and line.
 
 ## Survey output (T-07)
 
-`ccircuit survey <dir> [--json] [--lang ts|rails]` prints the survey. Text output groups by module, then by direction, then by kind. Each line holds method, target, symbol and `file:line`. Unresolved targets show with a `?` mark.
+`ccircuit survey <dir> [--json] [--lang ts|rails] [--include "METHOD target"]...` prints the survey. With `--include`, it keeps the matching entries and the exits of the nodes they reach. Text output groups by module, then by direction, then by kind. Each line holds method, target, symbol and `file:line`. Unresolved targets show with a `?` mark.

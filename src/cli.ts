@@ -15,7 +15,7 @@ Usage:
   ccircuit extract <dir> [--lang ts|rails] [--include "METHOD target"]...
                                                  Write a data map for a TypeScript repo or a
                                                  Rails app to stdout
-  ccircuit survey <dir> [--json] [--lang ts|rails]
+  ccircuit survey <dir> [--json] [--lang ts|rails] [--include "METHOD target"]...
                                                  List every entry point and exit point
   ccircuit import <data-map.json> <store.db>     Load a data map into a SQLite store
   ccircuit export <store.db>                     Write the data map held in a store to stdout
@@ -95,8 +95,8 @@ switch (command) {
     break;
   }
   case "survey": {
-    const { dir, lang, json } = parseArgs(args, "usage: ccircuit survey <dir> [--json] [--lang ts|rails]");
-    const survey = lang === "rails" ? railsSurvey(extractRails(dir)) : extractTypeScript(dir).survey;
+    const { dir, lang, json, include } = parseArgs(args, 'usage: ccircuit survey <dir> [--json] [--lang ts|rails] [--include "METHOD target"]...');
+    const survey = lang === "rails" ? railsSurvey(extractRails(dir, { include })) : extractTypeScript(dir, { include }).survey;
     process.stdout.write(json ? surveyJson(survey) : formatSurvey(survey));
     break;
   }

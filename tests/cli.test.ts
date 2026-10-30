@@ -26,7 +26,7 @@ const SHOP = "tests/fixtures/ts-shop";
 
 test("--help lists survey and --lang", () => {
   const out = run("--help").stdout.toString();
-  expect(out).toContain("ccircuit survey <dir> [--json] [--lang ts|rails]");
+  expect(out).toContain("ccircuit survey <dir> [--json] [--lang ts|rails] [--include");
   expect(out).toContain("--lang ts|rails");
 });
 
@@ -72,6 +72,14 @@ test("the Rails fixture is detected, and --lang overrides detection", () => {
   expect(map.endpoints.map((e: any) => e.id)).toEqual(["POST /api/v1/statuses"]);
   const forced = JSON.parse(run("survey", "tests/fixtures/rails-app", "--json", "--lang", "ts").stdout.toString());
   expect(forced.entries).toEqual([]);
+});
+
+test("survey --include keeps the matching entries and the exits they reach", () => {
+  const back = JSON.parse(run("survey", SHOP, "--json", "--include", "GET /api/orders/:orderId").stdout.toString());
+  expect(back.entries.map((e: any) => `${e.method} ${e.target}`)).toEqual(["GET /api/orders/:id"]);
+  expect(back.exits.length).toBeGreaterThan(0);
+  const all = JSON.parse(run("survey", SHOP, "--json").stdout.toString());
+  expect(back.exits.length).toBeLessThan(all.exits.length);
 });
 
 test("survey with a bad --lang or a missing directory exits 1", () => {
