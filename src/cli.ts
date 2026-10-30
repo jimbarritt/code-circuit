@@ -1,7 +1,10 @@
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import pkg from "../package.json";
 import { assertDataMap } from "./datamap.ts";
 import { extractRails } from "./extract/rails.ts";
+import { extractTypeScript } from "./extract/ts/assemble.ts";
+import { formatSurvey, railsSurvey, surveyJson } from "./extract/ts/survey.ts";
 import { serveBoard } from "./server.ts";
 import { exportDataMap, importDataMap, openStore } from "./store.ts";
 
@@ -9,8 +12,11 @@ const USAGE = `ccircuit: draw a service as a circuit board
 
 Usage:
   ccircuit render <data-map.json> [--port <n>]   Serve the board for a data map
-  ccircuit extract <rails-checkout> [--include "METHOD /path"]...
-                                                 Write a data map for a Rails app to stdout
+  ccircuit extract <dir> [--lang ts|rails] [--include "METHOD target"]...
+                                                 Write a data map for a TypeScript repo or a
+                                                 Rails app to stdout
+  ccircuit survey <dir> [--json] [--lang ts|rails]
+                                                 List every entry point and exit point
   ccircuit import <data-map.json> <store.db>     Load a data map into a SQLite store
   ccircuit export <store.db>                     Write the data map held in a store to stdout
   ccircuit --version                             Show the version
@@ -21,6 +27,40 @@ const fail = (msg: string): never => {
   process.stderr.write(`ccircuit: ${msg}\n`);
   process.exit(1);
 };
+
+type Lang = "ts" | "rails";
+
+function hasTs(dir: string, depth = 0): boolean {
+  if (depth > 6) return false;
+  let entries;
+  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return false; }
+  for (const e of entries) if (e.isFile() && /\.tsx?$/.test(e.name) && !e.name.endsWith(".d.ts")) return true;
+  return entries.some((e) => e.isDirectory() && !e.name.startsWith(".") && e.name !== "node_modules" && hasTs(join(dir, e.name), depth + 1));
+}
+
+function detectLang(dir: string): Lang | undefined {
+  if (existsSync(join(dir, "config/routes.rb")) && existsSync(join(dir, "Gemfile"))) return "rails";
+  if (existsSync(join(dir, "package.json")) || existsSync(join(dir, "tsconfig.json")) || hasTs(dir)) return "ts";
+  return existsSync(join(dir, "config/routes.rb")) ? "rails" : undefined;
+}
+
+/** Splits `<dir> [flags]` and resolves the language. */
+function parseArgs(args: string[], usage: string) {
+  const [dir, ...rest] = args;
+  if (!dir || !existsSync(dir)) fail(usage);
+  const include: string[] = [];
+  let lang: string | undefined, json = false;
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] === "--include") include.push(rest[++i] ?? "");
+    else if (rest[i] === "--lang") lang = rest[++i];
+    else if (rest[i] === "--json") json = true;
+    else fail(`unknown option "${rest[i]}"\n${usage}`);
+  }
+  if (lang && lang !== "ts" && lang !== "rails") fail(`unknown language "${lang}": use ts or rails`);
+  const found = (lang as Lang | undefined) ?? detectLang(dir!);
+  if (!found) fail(`cannot tell the language of ${dir}: use --lang ts or --lang rails`);
+  return { dir: dir!, lang: found!, include: include.length ? include : undefined, json };
+}
 
 const [command, ...args] = process.argv.slice(2);
 
@@ -49,12 +89,15 @@ switch (command) {
     break;
   }
   case "extract": {
-    const [dir, ...rest] = args;
-    if (!dir || !existsSync(dir)) fail('usage: ccircuit extract <rails-checkout> [--include "METHOD /path"]...');
-    const include: string[] = [];
-    for (let i = 0; i < rest.length; i++) if (rest[i] === "--include") include.push(rest[++i]);
-    const map = extractRails(dir, { include: include.length ? include : undefined });
+    const { dir, lang, include } = parseArgs(args, 'usage: ccircuit extract <dir> [--lang ts|rails] [--include "METHOD target"]...');
+    const map = lang === "rails" ? extractRails(dir, { include }) : extractTypeScript(dir, { include });
     process.stdout.write(JSON.stringify(assertDataMap(map), null, 2) + "\n");
+    break;
+  }
+  case "survey": {
+    const { dir, lang, json } = parseArgs(args, "usage: ccircuit survey <dir> [--json] [--lang ts|rails]");
+    const survey = lang === "rails" ? railsSurvey(extractRails(dir)) : extractTypeScript(dir).survey;
+    process.stdout.write(json ? surveyJson(survey) : formatSurvey(survey));
     break;
   }
   case "import": {
