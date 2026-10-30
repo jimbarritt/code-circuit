@@ -52,7 +52,7 @@ function statements(code: string): string[] {
     const line = raw.trim();
     if (!line) continue;
     cur += (cur ? " " : "") + line;
-    for (const c of line) depth += "([{".includes(c) ? 1 : ")]}".includes(c) ? -1 : 0;
+    for (const c of stripRuby(line)) depth += "([{".includes(c) ? 1 : ")]}".includes(c) ? -1 : 0;
     if (depth <= 0 && !/[,\\]$/.test(line)) { out.push(cur); cur = ""; depth = 0; }
   }
   if (cur) out.push(cur);

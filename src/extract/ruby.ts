@@ -22,7 +22,7 @@ export function stripRuby(src: string, keepStrings = false): string {
       if (interp.length) {
         if (c === "{") interp[interp.length - 1]++;
         if (c === "}") {
-          if (interp[interp.length - 1] === 0) { interp.pop(); mode = "dq"; i++; continue; }
+          if (interp[interp.length - 1] === 0) { interp.pop(); mode = "dq"; out += keepStrings ? c : " "; i++; continue; }
           interp[interp.length - 1]--;
         }
       }

@@ -112,3 +112,7 @@ test("methodBodies finds a def by indentation and methodWithHelpers adds local c
 test("routeKey treats parameter names as equal", () => {
   expect(routeKey("post", "/a/:status_id/b")).toBe(routeKey("POST", "/a/:id/b"));
 });
+
+test("stripRuby keeps the braces around an interpolation when it keeps strings", () => {
+  expect(stripRuby(`x = "a #{b} c"`, true)).toBe(`x = "a #{b} c"`);
+});
