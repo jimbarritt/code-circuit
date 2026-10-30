@@ -10,14 +10,26 @@ const PRISMA_RAW = new Set(["$queryRaw", "$executeRaw", "$queryRawUnsafe", "$exe
 const MONGOOSE_OPS = new Set(["find", "findOne", "findById", "findByIdAndUpdate", "findByIdAndDelete", "findOneAndUpdate", "findOneAndDelete", "findOneAndReplace", "create", "insertMany", "updateOne", "updateMany", "replaceOne", "deleteOne", "deleteMany", "countDocuments", "estimatedDocumentCount", "exists", "aggregate", "distinct", "bulkWrite"]);
 const SEQUELIZE_OPS = new Set(["findAll", "findOne", "findByPk", "findOrCreate", "findAndCountAll", "create", "bulkCreate", "update", "destroy", "upsert", "count", "max", "min", "sum", "increment", "decrement", "truncate"]);
 const DRIZZLE_OPS = new Set(["findMany", "findFirst"]);
+const KYSELY_OPS = new Set(["selectFrom", "insertInto", "updateTable", "deleteFrom", "replaceInto", "mergeInto"]);
+const UNIT_OF_WORK = { target: "(unit of work)", resolved: true };
 
 const db = (protocol: string, method: string, t: { target: string; resolved: boolean }, rule: string): Hit => ({ kind: "database", protocol, method, ...t, rule });
 const named = (s: Site) => (s.client.name !== undefined ? { target: s.client.name, resolved: !!s.client.resolved } : { target: s.recv?.getText() ?? "?", resolved: false });
 
-/** The client under a call chain: `em` in `em.persist(x).flush()`. */
-const root = (e: ts.Expression | undefined) => {
-  while (e && ts.isCallExpression(e) && ts.isPropertyAccessExpression(e.expression)) e = e.expression.expression;
-  return e;
+/** Entity of a MikroORM persist or remove argument: `new User()`, `repo.create(...)` or `em.create(User, ...)` in a local. */
+const entityOf = (r: Resolver, arg: ts.Expression | undefined): { target: string; resolved: boolean } => {
+  if (!arg) return UNIT_OF_WORK;
+  const e = unwrap(arg);
+  const init = ts.isIdentifier(e) ? r.initOf(e) : e;
+  const x = init && unwrap(init);
+  if (x && ts.isNewExpression(x) && ts.isIdentifier(x.expression)) return { target: x.expression.text, resolved: true };
+  if (x && ts.isCallExpression(x) && ts.isPropertyAccessExpression(x.expression) && x.expression.name.text === "create") {
+    const c = r.clientOf(x.expression.expression);
+    if (c?.lib === "mikro-repo" && c.name) return { target: c.name, resolved: !!c.resolved };
+    const first = x.arguments[0] && unwrap(x.arguments[0]);
+    if (c?.lib === "mikro-em" && first && ts.isIdentifier(first)) return { target: first.text, resolved: true };
+  }
+  return { target: arg.getText(), resolved: false };
 };
 
 /** SQL of a query call: a string, or `{ text }` / `{ sql }`. */
@@ -52,7 +64,7 @@ export const databaseDetector: Detector = siteDetector("database", (s, r) => {
         return db("mikro-orm", m, ts.isIdentifier(e) ? { target: e.text, resolved: true } : r.val(e), "mikro-orm-entity-manager");
       }
       if (!MIKRO_OBJECT_OPS.has(m)) return undefined;
-      return db("mikro-orm", m, m === "execute" ? sql(r, args[0]) : { target: (args[0] ?? root(s.recv))?.getText() ?? "?", resolved: false }, "mikro-orm-entity-manager");
+      return db("mikro-orm", m, m === "execute" ? sql(r, args[0]) : m === "flush" ? UNIT_OF_WORK : entityOf(r, args[0]), "mikro-orm-entity-manager");
     case "mikro-repo":
       if (!MIKRO_ENTITY_OPS.has(m) && !MIKRO_OBJECT_OPS.has(m)) return undefined;
       return db("mikro-orm", m, named(s), "mikro-orm-repository");
@@ -84,6 +96,10 @@ export const databaseDetector: Detector = siteDetector("database", (s, r) => {
     }
     case "drizzle-model":
       return DRIZZLE_OPS.has(m) ? db("drizzle", m, named(s), "drizzle-query") : undefined;
+    case "kysely":
+      return KYSELY_OPS.has(m) ? db("kysely", m, r.val(args[0]), "kysely-query") : undefined;
+    case "kysely-raw":
+      return m === "execute" ? db("kysely", "sql", { target: s.recv?.getText() ?? "?", resolved: false }, "kysely-sql") : undefined;
     case "pg": case "mysql":
       return m === "query" || m === "execute" ? db(c.lib, m, sql(r, args[0]), `${c.lib}-query`) : undefined;
   }

@@ -75,9 +75,11 @@ describe.skipIf(!existsSync(NEST_STARTER))("nest-turbo-starter", () => {
 
   test("MikroORM repository subclass and entity manager", () => {
     expect(has({ kind: "database", protocol: "mikro-orm", method: "findOne", target: "User", resolved: true, symbol: "UserService.getUser" })).toBe(true);
-    expect(has({ kind: "database", protocol: "mikro-orm", method: "persist", target: "user", resolved: false, symbol: "UserService.createUser" })).toBe(true);
-    expect(has({ kind: "database", protocol: "mikro-orm", method: "flush", target: "this.em", symbol: "UserService.createUser" })).toBe(true);
+    expect(has({ kind: "database", protocol: "mikro-orm", method: "persist", target: "User", resolved: true, symbol: "UserService.createUser" })).toBe(true);
+    expect(has({ kind: "database", protocol: "mikro-orm", method: "flush", target: "(unit of work)", symbol: "UserService.createUser" })).toBe(true);
     expect(has({ kind: "database", protocol: "mikro-orm", method: "create" })).toBe(false);
+    expect(has({ kind: "database", protocol: "mikro-orm", method: "persist", target: "User", resolved: true, symbol: "CreateAdminCommand.run" })).toBe(true);
+    expect(found.filter((f) => f.protocol === "mikro-orm" && f.method === "flush").every((f) => f.target === "(unit of work)")).toBe(true);
   });
 
   test("ioredis behind an inject token, and the axios wrapper only inside the wrapper", () => {
@@ -198,5 +200,35 @@ describe("queue-out and cloud", () => {
     expect(survey({
       "src/a.ts": "import { SendEmailCommand } from '@aws-sdk/client-ses';\nexport async function f(client: any) {\n  const cmd = new SendEmailCommand({});\n  await client.send(cmd);\n}",
     })).toEqual(["cloud aws-ses SendEmail SES/SendEmail"]);
+  });
+});
+
+describe("more clients", () => {
+  test("a generated Prisma client, Kysely, MikroORM persist targets and Octokit", () => {
+    expect(survey({
+      "src/prisma.service.ts": "import { PrismaClient } from '../prisma/generated-prisma-client';\nexport class PrismaService extends PrismaClient {}",
+      "src/users.ts": "import { PrismaService } from './prisma.service';\nexport class Users {\n  constructor(private prisma: PrismaService) {}\n  a() { return this.prisma.user.findMany(); }\n}",
+      "src/album.repo.ts": "import { Kysely, sql } from 'kysely';\nimport { InjectKysely } from 'nestjs-kysely';\nexport class AlbumRepo {\n  constructor(@InjectKysely() private db: Kysely<DB>) {}\n  a() { return this.db.selectFrom('album').selectAll().execute(); }\n  b() { return this.db.deleteFrom('album').where('id', '=', 1).execute(); }\n  c() { return sql`select 1`.execute(this.db); }\n}",
+      "src/admin.ts": "import { EntityManager } from '@mikro-orm/core';\nexport async function f(em: EntityManager) {\n  const admin = em.create(User, {});\n  em.persist(admin);\n  em.persist(new Role());\n  await em.flush();\n}",
+      "src/gh.ts": "import { Octokit } from '@octokit/rest';\nconst octokit = new Octokit({});\nexport async function g() {\n  await octokit.rest.repos.get({ owner: 'o', repo: 'r' });\n  await octokit.request('GET /user');\n}",
+    })).toEqual([
+      "database mikro-orm persist User",
+      "database mikro-orm persist Role",
+      "database mikro-orm flush (unit of work)",
+      "database kysely selectFrom album",
+      "database kysely deleteFrom album",
+      "database kysely sql sql`select 1` ?",
+      "http-out octokit get repos.get",
+      "http-out octokit REQUEST GET /user",
+      "database prisma findMany user",
+    ]);
+  });
+
+  test("a Nest client package resolved to source inside the repo still gives clients", () => {
+    expect(survey({
+      "tsconfig.json": JSON.stringify({ compilerOptions: { paths: { "@nestjs/microservices": ["./packages/microservices"] } } }),
+      "packages/microservices/index.ts": "export class ClientProxyFactory { static create(o: any) {} }\nexport enum Transport { RMQ }",
+      "src/rmq.controller.ts": "import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';\nexport class RMQController {\n  client: ClientProxy;\n  constructor() { this.client = ClientProxyFactory.create({ transport: Transport.RMQ }); }\n  a() { return this.client.send('sum', 1); }\n}",
+    })).toEqual(["message-out rmq send sum"]);
   });
 });

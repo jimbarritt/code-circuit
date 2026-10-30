@@ -59,6 +59,8 @@ function family(spec: string): string | undefined {
   if (spec === "node-fetch" || spec === "cross-fetch" || spec === "isomorphic-fetch") return "fetch";
   if (spec === "sequelize" || spec === "sequelize-typescript") return "sequelize";
   if (spec === "cache-manager" || spec === "@nestjs/cache-manager") return "cache-manager";
+  if (spec === "@octokit/rest" || spec === "@octokit/core" || spec === "octokit") return "octokit";
+  if (spec === "kysely" || spec === "nestjs-kysely") return "kysely";
   const known = ["axios", "got", "undici", "ioredis", "kafkajs", "pg", "knex", "mongoose", "@prisma/client", "typeorm", "bullmq", "bull", "nats", "keyv", "@nestjs/microservices", "@nestjs/axios", "nodemailer", "google-auth-library"];
   return known.includes(spec) ? spec : undefined;
 }
@@ -78,6 +80,8 @@ const typeArgName = (args?: readonly ts.TypeNode[]) => {
 
 /** Client for a package export. `asType` reads it as a type annotation, so classes give instances. */
 function fromPkg(spec: string, name: string, asType: boolean, typeArgs?: readonly ts.TypeNode[]): Client | undefined {
+  // A generated Prisma client, from a `generator client { output }` path that is not in git.
+  if (name === "PrismaClient" && (/prisma/i.test(spec) || spec.startsWith("."))) return asType ? { lib: "prisma" } : { lib: "prisma", ctor: true };
   const fam = family(spec);
   if (!fam) return undefined;
   const whole = name === "default" || name === "*";
@@ -127,6 +131,8 @@ function fromPkg(spec: string, name: string, asType: boolean, typeArgs?: readonl
     case "@nestjs/axios": return name === "HttpService" ? ({ lib: "nest-http" }) : undefined;
     case "nodemailer": return whole ? ({ lib: "nodemailer-mod" }) : name === "createTransport" ? { lib: "nodemailer", ctor: true } : name === "Transporter" ? ({ lib: "nodemailer" }) : undefined;
     case "google-auth-library": return name === "OAuth2Client" ? cls({ lib: "google-oauth" }) : undefined;
+    case "octokit": return name === "Octokit" || name === "App" ? cls({ lib: "octokit" }) : undefined;
+    case "kysely": return name === "Kysely" || name === "Transaction" ? cls({ lib: "kysely" }) : name === "sql" ? { lib: "kysely-sql" } : undefined;
   }
   return undefined;
 }
@@ -186,7 +192,8 @@ function makeResolver({ project, index }: DetectContext): Resolver {
   };
 
   const importBinding = (file: string, spec: string, imported: string, seen: Set<string>): Binding | undefined => {
-    const to = project.resolveImport(file, spec);
+    // A known client package stays a package even when the repo holds its source, as the Nest repo does.
+    const to = family(spec) ? undefined : project.resolveImport(file, spec);
     if (!to) return { pkg: spec, name: imported };
     return imported === "*" ? { ns: to } : exportOf(to, imported, seen);
   };
@@ -300,6 +307,7 @@ function makeResolver({ project, index }: DetectContext): Resolver {
       if (name === "InjectModel") { const en = entityName(arg); return { lib: spec === "@nestjs/sequelize" ? "sequelize-model" : "mongoose-model", name: en.name, resolved: en.resolved }; }
       if (name === "InjectQueue") { const v = arg ? val(arg) : { target: "default", resolved: true }; return { lib: "queue", protocol: spec === "@nestjs/bull" ? "bull" : "bullmq", name: v.target, resolved: v.resolved }; }
       if (name === "InjectRedis") return { lib: "ioredis" };
+      if (name === "InjectKysely") return { lib: "kysely" };
       if (/^Inject(DataSource|EntityManager|Connection)$/.test(name) && spec === "@nestjs/typeorm") return { lib: "typeorm-em" };
       if (name === "Client" && call) return fromTransport(transportOf(arg));
       if (name !== "Inject" || !arg) continue;
@@ -455,6 +463,8 @@ function makeResolver({ project, index }: DetectContext): Resolver {
       case "amqp": return name === "connect" ? { lib: "amqp-conn", ctor: true } : undefined;
       case "aws2-mod": return /^[A-Z]/.test(name) ? { lib: "aws2", name, protocol: `aws-${name.toLowerCase()}`, ctor: true } : undefined;
       case "nodemailer-mod": return name === "createTransport" ? { lib: "nodemailer", ctor: true } : undefined;
+      case "octokit": return name === "rest" ? { lib: "octokit-rest" } : undefined;
+      case "octokit-rest": return { lib: "octokit-ns", name };
     }
     return undefined;
   };
@@ -509,6 +519,7 @@ function makeResolver({ project, index }: DetectContext): Resolver {
       return base && member(base, name);
     });
     if (ts.isNewExpression(e)) return cached(e, () => { const c = clientOf(e.expression); return c?.ctor ? construct(c, e.arguments ?? []) : undefined; });
+    if (ts.isTaggedTemplateExpression(e) && ts.isIdentifier(e.tag)) return clientOf(e.tag)?.lib === "kysely-sql" ? { lib: "kysely-raw" } : undefined;
     if (ts.isCallExpression(e)) return cached(e, () => {
       const callee = unwrap(e.expression);
       if (ts.isIdentifier(callee) && callee.text === "require" && e.arguments[0] && ts.isStringLiteral(e.arguments[0])) return fromPkg(e.arguments[0].text, "*", false);

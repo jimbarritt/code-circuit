@@ -16,6 +16,8 @@ const isObj = (e: ts.Expression | undefined) => !!e && ts.isObjectLiteralExpress
 
 export const httpDetector: Detector = siteDetector("http-out", (s, r) => {
   const { client: c, method: m, args } = s;
+  if (c.lib === "octokit" && m === "request") return { kind: "http-out", protocol: "octokit", method: "REQUEST", ...r.val(args[0]), rule: "octokit-request", detail: "host: api.github.com" };
+  if (c.lib === "octokit-ns") return { kind: "http-out", protocol: "octokit", method: m, target: `${c.name}.${m}`, resolved: true, rule: "octokit-rest", detail: "host: api.github.com" };
   const protocol = PROTOCOL[c.lib];
   if (!protocol) return undefined;
   let verb: string, url: ts.Expression | undefined;
