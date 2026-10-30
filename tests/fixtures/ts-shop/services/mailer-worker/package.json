@@ -1,0 +1,9 @@
+{
+  "name": "@shop/mailer-worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/main.js",
+  "dependencies": {
+    "@shop/contracts": "*"
+  }
+}

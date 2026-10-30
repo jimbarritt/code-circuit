@@ -1,0 +1,8 @@
+{
+  "name": "ts-shop",
+  "private": true,
+  "workspaces": ["services/*", "packages/*"],
+  "scripts": {
+    "build": "npm run build --workspaces"
+  }
+}

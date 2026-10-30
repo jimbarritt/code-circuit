@@ -1,0 +1,8 @@
+{
+  "name": "jobs",
+  "sourceRoot": "jobs/src",
+  "projectType": "application",
+  "targets": {
+    "serve": { "executor": "@nx/js:node", "options": { "buildTarget": "jobs:build" } }
+  }
+}
