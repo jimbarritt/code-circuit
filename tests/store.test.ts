@@ -38,7 +38,7 @@ test("an invalid data map is refused", () => {
   expect(() => importDataMap(openStore(), { nodes: [] })).toThrow("invalid data map");
 });
 
-test("cc import and cc export round-trip the sketch through a store file", () => {
+test("ccircuit import and ccircuit export round-trip the sketch through a store file", () => {
   const dir = Bun.spawnSync(["mktemp", "-d"]).stdout.toString().trim();
   const cwd = import.meta.dir + "/..";
   const run = (...a: string[]) => Bun.spawnSync(["bun", "run", "src/cli.ts", ...a], { cwd });

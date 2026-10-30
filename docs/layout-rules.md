@@ -1,6 +1,6 @@
 # Layout rules
 
-This document defines how `cc render` places chips and routes traces. The rules come from the `route()` function of the hand-drawn sketch (`src/html/sketch/mastodon-circuit-board.html`) and from the constraints of the mission. `src/layout.ts` implements them. `tests/layout.test.ts` checks them.
+This document defines how `ccircuit render` places chips and routes traces. The rules come from the `route()` function of the hand-drawn sketch (`src/html/sketch/mastodon-circuit-board.html`) and from the constraints of the mission. `src/layout.ts` implements them. `tests/layout.test.ts` checks them.
 
 ## Terms
 

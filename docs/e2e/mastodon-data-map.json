@@ -2,7 +2,7 @@
   "system": "mastodon",
   "language": "ruby",
   "framework": "rails",
-  "captured": "extracted by cc",
+  "captured": "extracted by ccircuit",
   "endpoints": [
     {
       "id": "POST /inbox",

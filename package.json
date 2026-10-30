@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
-    "build": "bun build --compile src/cli.ts --outfile cc"
+    "build": "bun build --compile src/cli.ts --outfile ccircuit"
   },
   "dependencies": {
     "ajv": "8.20.0"

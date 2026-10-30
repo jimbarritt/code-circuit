@@ -1,22 +1,24 @@
 import { readFileSync, existsSync } from "node:fs";
+import pkg from "../package.json";
 import { assertDataMap } from "./datamap.ts";
 import { extractRails } from "./extract/rails.ts";
 import { serveBoard } from "./server.ts";
 import { exportDataMap, importDataMap, openStore } from "./store.ts";
 
-const USAGE = `cc: draw a service as a circuit board
+const USAGE = `ccircuit: draw a service as a circuit board
 
 Usage:
-  cc render <data-map.json> [--port <n>]   Serve the board for a data map
-  cc extract <rails-checkout> [--include "METHOD /path"]...
-                                           Write a data map for a Rails app to stdout
-  cc import <data-map.json> <store.db>     Load a data map into a SQLite store
-  cc export <store.db>                     Write the data map held in a store to stdout
-  cc --help                                Show this text
+  ccircuit render <data-map.json> [--port <n>]   Serve the board for a data map
+  ccircuit extract <rails-checkout> [--include "METHOD /path"]...
+                                                 Write a data map for a Rails app to stdout
+  ccircuit import <data-map.json> <store.db>     Load a data map into a SQLite store
+  ccircuit export <store.db>                     Write the data map held in a store to stdout
+  ccircuit --version                             Show the version
+  ccircuit --help                                Show this text
 `;
 
 const fail = (msg: string): never => {
-  process.stderr.write(`cc: ${msg}\n`);
+  process.stderr.write(`ccircuit: ${msg}\n`);
   process.exit(1);
 };
 
@@ -26,6 +28,10 @@ switch (command) {
   case undefined:
     process.stdout.write(USAGE);
     process.exit(1);
+  case "--version":
+  case "-v":
+    process.stdout.write(`ccircuit ${pkg.version}\n`);
+    break;
   case "--help":
   case "-h":
   case "help":
@@ -33,7 +39,7 @@ switch (command) {
     break;
   case "render": {
     const [file, ...rest] = args;
-    if (!file || !existsSync(file)) fail("usage: cc render <data-map.json> [--port <n>]");
+    if (!file || !existsSync(file)) fail("usage: ccircuit render <data-map.json> [--port <n>]");
     const pi = rest.indexOf("--port");
     const port = pi >= 0 ? Number(rest[pi + 1]) : 0;
     const db = openStore();
@@ -44,7 +50,7 @@ switch (command) {
   }
   case "extract": {
     const [dir, ...rest] = args;
-    if (!dir || !existsSync(dir)) fail('usage: cc extract <rails-checkout> [--include "METHOD /path"]...');
+    if (!dir || !existsSync(dir)) fail('usage: ccircuit extract <rails-checkout> [--include "METHOD /path"]...');
     const include: string[] = [];
     for (let i = 0; i < rest.length; i++) if (rest[i] === "--include") include.push(rest[++i]);
     const map = extractRails(dir, { include: include.length ? include : undefined });
@@ -53,7 +59,7 @@ switch (command) {
   }
   case "import": {
     const [json, dbPath] = args;
-    if (!json || !dbPath) fail("usage: cc import <data-map.json> <store.db>");
+    if (!json || !dbPath) fail("usage: ccircuit import <data-map.json> <store.db>");
     const db = openStore(dbPath);
     importDataMap(db, JSON.parse(readFileSync(json, "utf8")));
     db.close();
@@ -61,7 +67,7 @@ switch (command) {
   }
   case "export": {
     const [dbPath] = args;
-    if (!dbPath || !existsSync(dbPath)) fail("usage: cc export <store.db>");
+    if (!dbPath || !existsSync(dbPath)) fail("usage: ccircuit export <store.db>");
     const db = openStore(dbPath);
     process.stdout.write(JSON.stringify(exportDataMap(db), null, 2) + "\n");
     db.close();

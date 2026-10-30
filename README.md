@@ -1,23 +1,23 @@
 # code-circuit
 
-`cc` draws a service as a circuit board.
+`ccircuit` draws a service as a circuit board.
 
 Endpoints sit on the edge of the board as pads. Modules, classes and functions are chips. Traces show execution paths between them. Queue hops run through named lanes. Databases, caches and remote systems sit on the far edge. The board is interactive, so you can follow a path from an endpoint through the service and see where it ends.
 
 The purpose is navigation. In a large repository or a monorepo with many endpoints, the board shows which chips many endpoints share and which sit inside a single path. A chip reached by one endpoint is a candidate seam.
 
-**Status: first version.** `cc extract` reads a Rails app and `cc render` draws the data map. A hand-drawn board of six Mastodon endpoints stays in [src/html/sketch/](src/html/sketch/) and is unchanged. The mission report is [docs/report.md](docs/report.md). The layout rules are in [docs/layout-rules.md](docs/layout-rules.md).
+**Status: first version.** `ccircuit extract` reads a Rails app and `ccircuit render` draws the data map. A hand-drawn board of six Mastodon endpoints stays in [src/html/sketch/](src/html/sketch/) and is unchanged. The mission report is [docs/report.md](docs/report.md). The layout rules are in [docs/layout-rules.md](docs/layout-rules.md).
 
 ## How it works
 
 Two programs share one file format.
 
 ```
-source code  ->  cc extract  ->  data map (JSON)  ->  cc render  ->  board in a browser
+source code  ->  ccircuit extract  ->  data map (JSON)  ->  ccircuit render  ->  board in a browser
 ```
 
-- `cc extract` reads source code and writes a data map. It never draws.
-- `cc render` reads a data map and serves the board. It never reads source code.
+- `ccircuit extract` reads source code and writes a data map. It never draws.
+- `ccircuit render` reads a data map and serves the board. It never reads source code.
 - A hand-written data map renders the same way as an extracted one.
 - SQLite holds the graph between the two. The JSON is its import and export.
 
@@ -36,18 +36,30 @@ Every edge records which extraction rule produced it.
 
 ## Install
 
+With [Homebrew](https://brew.sh) on macOS or Linux:
+
 ```bash
-bun install
-bun run build        # bun build --compile, writes ./cc
+brew install jimbarritt/tap/ccircuit
 ```
 
-The result is one binary, `cc`. It needs a browser at run time and nothing else.
+To build from source:
+
+```bash
+bun install
+bun run build        # bun build --compile, writes ./ccircuit
+```
+
+The result is one binary, `ccircuit`. It needs a browser at run time and nothing else.
+
+## Release
+
+Bump `version` in `package.json`, commit and push to `main`. The workflow in `.github/workflows/release.yml` runs the tests, tags the commit, creates the GitHub release, builds the binary for macOS and Linux (Apple silicon and Intel, arm64 and x86_64), and writes `Formula/ccircuit.rb` in `jimbarritt/homebrew-tap`. The `formula` job needs the secret `HOMEBREW_TAP_TOKEN` in the environment `release`.
 
 ## Use
 
 ```bash
-cc extract ~/src/mastodon > mastodon.json
-cc render mastodon.json
+ccircuit extract ~/src/mastodon > mastodon.json
+ccircuit render mastodon.json
 ```
 
 `render` prints a local URL. Open it.
@@ -55,7 +67,7 @@ cc render mastodon.json
 Without options, `extract` writes every route of the app. For a Rails app of Mastodon's size, that gives a board too large to read. Name the endpoints to keep with `--include`. Parameter names do not matter in a match.
 
 ```bash
-cc extract ~/src/mastodon \
+ccircuit extract ~/src/mastodon \
   --include "POST /api/v1/statuses" \
   --include "GET /api/v1/timelines/home" \
   --include "POST /api/v1/statuses/:id/favourite" \
@@ -75,8 +87,8 @@ On the board:
 The other two commands move a data map in and out of SQLite.
 
 ```bash
-cc import mastodon.json store.db
-cc export store.db > copy.json
+ccircuit import mastodon.json store.db
+ccircuit export store.db > copy.json
 ```
 
 ## Test

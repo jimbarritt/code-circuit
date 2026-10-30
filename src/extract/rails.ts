@@ -177,7 +177,7 @@ export function extractRails(root: string, opts: ExtractOptions = {}): DataMap {
     system: root.split("/").filter(Boolean).pop() ?? "rails-app",
     language: "ruby",
     framework: "rails",
-    captured: opts.captured ?? "extracted by cc",
+    captured: opts.captured ?? "extracted by ccircuit",
     endpoints,
     externals: [...externals.values()],
     nodes: [...nodes.values()],

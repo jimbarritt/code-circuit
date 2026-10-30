@@ -10,7 +10,7 @@ const json = (v: unknown, status = 200) => Response.json(v, { status });
 export function serveBoard(db: Database, opts: { port?: number; title?: string } = {}) {
   const map = exportDataMap(db);
   const board = { ...layoutBoard(map), title: opts.title ?? (map.system ? `${map.system} circuit board` : "Circuit board") };
-  for (const line of board.log) console.error(`cc: ${line}`);
+  for (const line of board.log) console.error(`ccircuit: ${line}`);
   return Bun.serve({
     port: opts.port ?? 0,
     hostname: "127.0.0.1",
