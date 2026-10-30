@@ -1,0 +1,457 @@
+<title>Mastodon Circuit Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: one wide board panel, controls above, inspector below. Single committed look: dark PCB. */
+  :root {
+    --bg: #0d1412;
+    --panel: #121c19;
+    --board: #0f2a22;
+    --board-edge: #1f5a46;
+    --grid: #163a2f;
+    --fg: #d9e6e0;
+    --muted: #7f9c92;
+    --copper: #c68a43;
+    --copper-dim: #5a4a33;
+    --hot: #ffd166;
+    --queue: #5fb4c9;
+    --kind-controller: #8fd3a8;
+    --kind-service: #e4c27a;
+    --kind-model: #9fb4ff;
+    --kind-worker: #5fb4c9;
+    --kind-adapter: #d49cff;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--sans); font-size: 14px; line-height: 1.45;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 18px 40px;
+  }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 12px; }
+  h1 { font-family: var(--mono); font-weight: 600; font-size: 18px; margin: 0; letter-spacing: 0.02em; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .toolbar .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  button {
+    font: 500 12px/1 var(--mono); color: var(--fg); background: var(--panel);
+    border: 1px solid var(--board-edge); border-radius: 3px; padding: 7px 10px; cursor: pointer;
+  }
+  button:hover { border-color: var(--copper); }
+  button:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+  button.active { background: var(--copper); color: #1a120a; border-color: var(--copper); }
+  button.toggle.active { background: var(--queue); border-color: var(--queue); }
+  .boardwrap { overflow-x: auto; border: 1px solid var(--board-edge); border-radius: 4px; background: var(--board); }
+  svg { display: block; min-width: 1320px; width: 100%; height: auto; font-family: var(--mono); }
+  .chip rect { fill: #0b1f19; stroke-width: 1.5; }
+  .chip text { font-size: 11px; fill: var(--fg); pointer-events: none; }
+  .chip .kind { font-size: 8px; letter-spacing: 0.08em; fill: var(--muted); }
+  .chip { cursor: pointer; }
+  .chip.dim { opacity: 0.22; }
+  .chip.sel rect { stroke: var(--hot); stroke-width: 2.5; }
+  .trace { fill: none; stroke: var(--copper); stroke-width: 1.6; }
+  .trace.async { stroke: var(--queue); stroke-dasharray: 5 4; }
+  .trace.io { stroke: var(--copper); stroke-width: 1.2; }
+  .trace.dim { stroke: var(--copper-dim); opacity: 0.35; }
+  .trace.async.dim { stroke: #2f4a52; }
+  .trace.lit { stroke: var(--hot); stroke-width: 2.4; }
+  .pad { cursor: pointer; }
+  .pad circle { fill: var(--board); stroke: var(--copper); stroke-width: 2.5; }
+  .pad.sel circle, .pad.lit circle { fill: var(--hot); stroke: var(--hot); }
+  .pad text { font-size: 10px; fill: var(--fg); }
+  .pad.dim { opacity: 0.3; }
+  .lane-label { font-size: 9px; fill: var(--queue); letter-spacing: 0.08em; }
+  .rail-label { font-size: 9px; fill: var(--copper); letter-spacing: 0.08em; }
+  .colhead { font-size: 9px; fill: var(--muted); letter-spacing: 0.12em; }
+  .below { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; margin-top: 14px; }
+  @media (max-width: 760px) { .below { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--board-edge); border-radius: 4px; padding: 12px 14px; min-width: 0; }
+  .panel h2 { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
+  .panel dt { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .panel dd { margin: 0; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  .panel ul { margin: 6px 0 0; padding-left: 18px; }
+  .panel li { font-family: var(--mono); font-size: 12px; }
+  .seam { display: inline-block; padding: 1px 6px; border-radius: 2px; font-size: 11px; font-family: var(--mono); background: #2a2f1a; color: var(--hot); }
+  pre { font-family: var(--mono); font-size: 11px; line-height: 1.4; margin: 0; max-height: 360px; overflow: auto; background: #0a100e; padding: 10px; border-radius: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 22px; height: 0; border-top: 2px solid var(--copper); }
+  .sw.async { border-top-style: dashed; border-color: var(--queue); }
+  .sw.lit { border-color: var(--hot); }
+  .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  @media (prefers-reduced-motion: no-preference) { .trace { transition: stroke 160ms, opacity 160ms; } .chip { transition: opacity 160ms; } }
+  [hidden] { display: none !important; }
+</style>
+
+<header>
+  <h1>Mastodon Circuit Board</h1>
+  <p>Six HTTP endpoints traced through the Rails service, by hand, from a reading of the Mastodon source. Click a pad to light its path. Click a chip to see which endpoints pass through it.</p>
+</header>
+
+<div class="toolbar">
+  <span class="lbl">Endpoints</span>
+  <div id="endpoint-buttons" style="display:contents"></div>
+  <button id="btn-reset">Reset</button>
+  <button id="btn-seams" class="toggle">Seam heat</button>
+  <button id="btn-data" class="toggle">Data map</button>
+</div>
+
+<div class="boardwrap"><svg id="board" viewBox="0 0 1320 740" role="img" aria-label="Circuit board diagram of Mastodon execution paths"></svg></div>
+
+<div class="legend">
+  <span><i class="sw"></i> synchronous call</span>
+  <span><i class="sw async"></i> Sidekiq enqueue (via queue lane)</span>
+  <span><i class="sw lit"></i> selected path</span>
+  <span><i class="dot" style="background:var(--kind-controller)"></i> controller</span>
+  <span><i class="dot" style="background:var(--kind-service)"></i> service</span>
+  <span><i class="dot" style="background:var(--kind-model)"></i> model</span>
+  <span><i class="dot" style="background:var(--kind-worker)"></i> worker</span>
+  <span><i class="dot" style="background:var(--kind-adapter)"></i> adapter</span>
+</div>
+
+<div class="below">
+  <section class="panel" id="inspector">
+    <h2>Inspector</h2>
+    <div id="insp-body"><p class="note">Nothing selected. Pads on the left edge are inbound HTTP endpoints. Pads on the right and top edges are outbound I/O: Postgres, Redis, remote ActivityPub servers, Web Push gateways. Dashed traces drop to the Sidekiq queue lanes at the bottom and come back up into a worker.</p></div>
+  </section>
+  <section class="panel" id="datapanel" hidden>
+    <h2>Data map (JSON, generated from the same model that draws the board)</h2>
+    <pre id="data-json"></pre>
+  </section>
+  <section class="panel" id="seampanel">
+    <h2>Seam reading</h2>
+    <div id="seam-body"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  // ---------- model ----------
+  const COLS = { A: 70, B: 310, C: 550, D: 790, E: 1030 };
+  const COL_ORDER = ['A', 'B', 'C', 'D', 'E'];
+  const ROW_Y = r => 40 + r * 60;
+  const W = 190, H = 40;
+  const LANES = { default: 650, push: 665, pull: 680, ingress: 695 };
+  const RAIL_Y = 18;
+
+  const nodes = [
+    { id: 'c_statuses', label: 'StatusesController#create', name: 'Api::V1::StatusesController#create', kind: 'controller', file: 'app/controllers/api/v1/statuses_controller.rb', col: 'A', row: 0 },
+    { id: 'c_home', label: 'Timelines::HomeController', name: 'Api::V1::Timelines::HomeController#show', kind: 'controller', file: 'app/controllers/api/v1/timelines/home_controller.rb', col: 'A', row: 2 },
+    { id: 'c_fav', label: 'FavouritesController#create', name: 'Api::V1::Statuses::FavouritesController#create', kind: 'controller', file: 'app/controllers/api/v1/statuses/favourites_controller.rb', col: 'A', row: 3 },
+    { id: 'c_follow', label: 'AccountsController#follow', name: 'Api::V1::AccountsController#follow', kind: 'controller', file: 'app/controllers/api/v1/accounts_controller.rb', col: 'A', row: 4 },
+    { id: 'c_inbox', label: 'AP::InboxesController', name: 'ActivityPub::InboxesController#create', kind: 'controller', file: 'app/controllers/activitypub/inboxes_controller.rb', col: 'A', row: 6 },
+    { id: 'w_ap_processing', label: 'AP::ProcessingWorker', name: 'ActivityPub::ProcessingWorker', kind: 'worker', queue: 'ingress', file: 'app/workers/activitypub/processing_worker.rb', col: 'A', row: 7 },
+    { id: 'c_notif', label: 'NotificationsController', name: 'Api::V1::NotificationsController#index', kind: 'controller', file: 'app/controllers/api/v1/notifications_controller.rb', col: 'A', row: 9 },
+
+    { id: 's_post', label: 'PostStatusService', name: 'PostStatusService', kind: 'service', file: 'app/services/post_status_service.rb', col: 'B', row: 0 },
+    { id: 's_mentions', label: 'ProcessMentionsService', name: 'ProcessMentionsService', kind: 'service', file: 'app/services/process_mentions_service.rb', col: 'B', row: 1 },
+    { id: 's_hashtags', label: 'ProcessHashtagsService', name: 'ProcessHashtagsService', kind: 'service', file: 'app/services/process_hashtags_service.rb', col: 'B', row: 2 },
+    { id: 's_fav', label: 'FavouriteService', name: 'FavouriteService', kind: 'service', file: 'app/services/favourite_service.rb', col: 'B', row: 3 },
+    { id: 's_follow', label: 'FollowService', name: 'FollowService', kind: 'service', file: 'app/services/follow_service.rb', col: 'B', row: 4 },
+    { id: 's_process_status', label: 'AP::ProcessStatusService', name: 'ActivityPub::ProcessStatusService (via ProcessCollectionService and Activity::Create)', kind: 'service', file: 'app/services/activitypub/process_status_service.rb', col: 'B', row: 7 },
+
+    { id: 'm_status', label: 'Status', name: 'Status (ActiveRecord)', kind: 'model', file: 'app/models/status.rb', col: 'C', row: 1 },
+    { id: 'm_account', label: 'Account', name: 'Account (ActiveRecord)', kind: 'model', file: 'app/models/account.rb', col: 'C', row: 2 },
+    { id: 'm_favourite', label: 'Favourite', name: 'Favourite (ActiveRecord)', kind: 'model', file: 'app/models/favourite.rb', col: 'C', row: 3 },
+    { id: 'm_follow', label: 'Follow', name: 'Follow (ActiveRecord)', kind: 'model', file: 'app/models/follow.rb', col: 'C', row: 4 },
+    { id: 'm_home_feed', label: 'HomeFeed', name: 'HomeFeed', kind: 'model', file: 'app/models/home_feed.rb', col: 'C', row: 6 },
+    { id: 'w_local_notif', label: 'LocalNotificationWorker', name: 'LocalNotificationWorker', kind: 'worker', queue: 'default', file: 'app/workers/local_notification_worker.rb', col: 'C', row: 8 },
+
+    { id: 'w_linkcrawl', label: 'LinkCrawlWorker', name: 'LinkCrawlWorker', kind: 'worker', queue: 'pull', file: 'app/workers/link_crawl_worker.rb', col: 'D', row: 0 },
+    { id: 'w_distribution', label: 'DistributionWorker', name: 'DistributionWorker', kind: 'worker', queue: 'default', file: 'app/workers/distribution_worker.rb', col: 'D', row: 1 },
+    { id: 'w_fanout', label: 'FanOutOnWriteWorker', name: 'FanOutOnWriteWorker', kind: 'worker', queue: 'default', file: 'app/workers/fan_out_on_write_worker.rb', col: 'D', row: 2 },
+    { id: 'w_ap_dist', label: 'AP::DistributionWorker', name: 'ActivityPub::DistributionWorker', kind: 'worker', queue: 'push', file: 'app/workers/activitypub/distribution_worker.rb', col: 'D', row: 3 },
+    { id: 'w_ap_delivery', label: 'AP::DeliveryWorker', name: 'ActivityPub::DeliveryWorker', kind: 'worker', queue: 'push', file: 'app/workers/activitypub/delivery_worker.rb', col: 'D', row: 4 },
+    { id: 'w_merge', label: 'MergeWorker', name: 'MergeWorker', kind: 'worker', queue: 'pull', file: 'app/workers/merge_worker.rb', col: 'D', row: 5 },
+    { id: 's_notify', label: 'NotifyService', name: 'NotifyService', kind: 'service', file: 'app/services/notify_service.rb', col: 'D', row: 8 },
+
+    { id: 'a_feedmanager', label: 'FeedManager', name: 'FeedManager (Redis list ops)', kind: 'adapter', file: 'app/lib/feed_manager.rb', col: 'E', row: 6 },
+    { id: 'a_request', label: 'Request', name: 'Request (signed outbound HTTP)', kind: 'adapter', file: 'app/lib/request.rb', col: 'E', row: 4 },
+    { id: 'w_webpush', label: 'Web::PushNotificationWorker', name: 'Web::PushNotificationWorker', kind: 'worker', queue: 'push', file: 'app/workers/web/push_notification_worker.rb', col: 'E', row: 7 },
+    { id: 'm_notification', label: 'Notification', name: 'Notification (ActiveRecord)', kind: 'model', file: 'app/models/notification.rb', col: 'E', row: 9 },
+  ];
+
+  const pads = [
+    { id: 'e_statuses', side: 'left', row: 0, method: 'POST', path: '/api/v1/statuses', entry: 'c_statuses' },
+    { id: 'e_home', side: 'left', row: 2, method: 'GET', path: '/api/v1/timelines/home', entry: 'c_home' },
+    { id: 'e_fav', side: 'left', row: 3, method: 'POST', path: '/api/v1/statuses/:id/favourite', entry: 'c_fav' },
+    { id: 'e_follow', side: 'left', row: 4, method: 'POST', path: '/api/v1/accounts/:id/follow', entry: 'c_follow' },
+    { id: 'e_inbox', side: 'left', row: 6, method: 'POST', path: '/inbox', entry: 'c_inbox' },
+    { id: 'e_notif', side: 'left', row: 9, method: 'GET', path: '/api/v1/notifications', entry: 'c_notif' },
+    { id: 'x_pg', side: 'top', label: 'PostgreSQL' },
+    { id: 'x_redis', side: 'right', row: 6, label: 'Redis' },
+    { id: 'x_remote', side: 'right', row: 4, label: 'Remote AP servers' },
+    { id: 'x_push', side: 'right', row: 7, label: 'Web Push gateways' },
+  ];
+
+  const edges = [
+    // pad -> controller
+    ['e_statuses', 'c_statuses', 'sync'], ['e_home', 'c_home', 'sync'], ['e_fav', 'c_fav', 'sync'],
+    ['e_follow', 'c_follow', 'sync'], ['e_inbox', 'c_inbox', 'sync'], ['e_notif', 'c_notif', 'sync'],
+    // sync calls
+    ['c_statuses', 's_post', 'sync'], ['s_post', 's_mentions', 'sync'], ['s_post', 's_hashtags', 'sync'], ['s_post', 'm_status', 'sync'],
+    ['s_mentions', 'm_account', 'sync'],
+    ['c_home', 'm_home_feed', 'sync'], ['m_home_feed', 'a_feedmanager', 'sync'],
+    ['c_fav', 's_fav', 'sync'], ['s_fav', 'm_favourite', 'sync'],
+    ['c_follow', 's_follow', 'sync'], ['s_follow', 'm_follow', 'sync'],
+    ['w_ap_processing', 's_process_status', 'sync'], ['s_process_status', 'm_status', 'sync'],
+    ['c_notif', 'm_notification', 'sync'],
+    ['w_fanout', 'a_feedmanager', 'sync'], ['w_merge', 'a_feedmanager', 'sync'],
+    ['w_ap_delivery', 'a_request', 'sync'],
+    ['w_local_notif', 's_notify', 'sync'], ['s_notify', 'm_notification', 'sync'],
+    // Sidekiq enqueues
+    ['s_post', 'w_distribution', 'async', 'default'], ['s_post', 'w_ap_dist', 'async', 'push'], ['s_post', 'w_linkcrawl', 'async', 'pull'],
+    ['w_distribution', 'w_fanout', 'async', 'default'], ['w_ap_dist', 'w_ap_delivery', 'async', 'push'],
+    ['s_mentions', 'w_local_notif', 'async', 'default'], ['s_fav', 'w_local_notif', 'async', 'default'], ['s_fav', 'w_ap_dist', 'async', 'push'],
+    ['s_follow', 'w_local_notif', 'async', 'default'], ['s_follow', 'w_merge', 'async', 'pull'], ['s_follow', 'w_ap_delivery', 'async', 'push'],
+    ['c_inbox', 'w_ap_processing', 'async', 'ingress'], ['s_process_status', 'w_distribution', 'async', 'default'],
+    ['s_notify', 'w_webpush', 'async', 'push'],
+    // I/O to the edge of the board
+    ['m_status', 'x_pg', 'io'], ['m_account', 'x_pg', 'io'], ['m_favourite', 'x_pg', 'io'], ['m_follow', 'x_pg', 'io'],
+    ['m_home_feed', 'x_pg', 'io'], ['m_notification', 'x_pg', 'io'],
+    ['a_feedmanager', 'x_redis', 'io'], ['a_request', 'x_remote', 'io'], ['w_webpush', 'x_push', 'io'],
+  ].map(([from, to, kind, queue], i) => ({ id: 'ed' + i, from, to, kind, queue }));
+
+  const byId = {};
+  nodes.forEach(n => { n.x = COLS[n.col]; n.y = ROW_Y(n.row); byId[n.id] = n; });
+  pads.forEach(p => { byId[p.id] = p; });
+
+  // ---------- reachability ----------
+  const out = {};
+  edges.forEach(e => { (out[e.from] = out[e.from] || []).push(e); });
+  const reach = {};
+  pads.filter(p => p.side === 'left').forEach(p => {
+    const seenN = new Set([p.id]), seenE = new Set(), q = [p.id];
+    while (q.length) { const n = q.shift(); (out[n] || []).forEach(e => { seenE.add(e.id); if (!seenN.has(e.to)) { seenN.add(e.to); q.push(e.to); } }); }
+    reach[p.id] = { nodes: seenN, edges: seenE };
+  });
+  const touchedBy = id => pads.filter(p => p.side === 'left' && reach[p.id].nodes.has(id));
+
+  // ---------- routing ----------
+  const colIdx = c => COL_ORDER.indexOf(c);
+  const asyncOutIdx = {}, asyncInIdx = {}, syncOutIdx = {};
+  edges.forEach(e => {
+    if (e.kind === 'async') {
+      e.oi = (asyncOutIdx[e.from] = (asyncOutIdx[e.from] || 0) + 1) - 1;
+      e.ii = (asyncInIdx[e.to] = (asyncInIdx[e.to] || 0) + 1) - 1;
+    } else { e.oi = (syncOutIdx[e.from] = (syncOutIdx[e.from] || 0) + 1) - 1; }
+  });
+
+  function route(e) {
+    const s = byId[e.from], t = byId[e.to];
+    if (s.side === 'left') { const y = ROW_Y(s.row) + 20; return `M 30 ${y} L ${COLS.A} ${y}`; }
+    const sx = s.x + W, sy = s.y + 20;
+    if (e.kind === 'io') {
+      if (t.side === 'top') {
+        const gx = s.x + W + 20 + e.oi * 4 + (s.col === 'E' ? 0 : 0);
+        return `M ${sx} ${sy} L ${gx} ${sy} L ${gx} ${RAIL_Y}`;
+      }
+      const ty = ROW_Y(t.row) + 20;
+      return `M ${sx} ${sy} L ${sx + 20} ${sy} L ${sx + 20} ${ty} L 1262 ${ty}`;
+    }
+    if (e.kind === 'sync') {
+      const gx = s.x + W + 20 + e.oi * 4;
+      if (colIdx(t.col) > colIdx(s.col)) {
+        const ty = t.y + 14;
+        return `M ${sx} ${sy} L ${gx} ${sy} L ${gx} ${ty} L ${t.x} ${ty}`;
+      }
+      const ty = t.y + 10; // loopback into the right edge
+      return `M ${sx} ${sy} L ${gx} ${sy} L ${gx} ${ty} L ${t.x + W} ${ty}`;
+    }
+    // async: down to the queue lane, along, back up into the target's left edge
+    const gx = s.x + W + 10 + e.oi * 4;
+    const tgx = t.x - 10 - e.ii * 4;
+    const ly = LANES[e.queue];
+    const ty = t.y + 28;
+    return `M ${sx} ${sy} L ${gx} ${sy} L ${gx} ${ly} L ${tgx} ${ly} L ${tgx} ${ty} L ${t.x} ${ty}`;
+  }
+
+  // ---------- render ----------
+  const svg = document.getElementById('board');
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); (parent || svg).appendChild(n); return n; };
+
+  const defs = el('defs', {});
+  defs.innerHTML = `
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#163a2f" stroke-width="0.6"/></pattern>
+    <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c68a43"/></marker>
+    <marker id="arr-async" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5fb4c9"/></marker>
+    <marker id="arr-lit" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#ffd166"/></marker>`;
+  el('rect', { x: 0, y: 0, width: 1320, height: 740, fill: 'url(#grid)' });
+
+  // column heads
+  [['A', 'ENTRY'], ['B', 'SERVICES'], ['C', 'MODELS'], ['D', 'WORKERS'], ['E', 'ADAPTERS']].forEach(([c, t]) => {
+    el('text', { x: COLS[c], y: 32, class: 'colhead' }).textContent = t;
+  });
+  // DB rail
+  el('path', { d: `M 760 ${RAIL_Y} L 1240 ${RAIL_Y}`, class: 'trace io', 'data-rail': 1 });
+  // queue lanes (faint base lines)
+  Object.entries(LANES).forEach(([q, y]) => {
+    el('path', { d: `M 48 ${y} L 1250 ${y}`, stroke: '#1d3d44', 'stroke-width': 1, fill: 'none', 'stroke-dasharray': '2 6' });
+    el('text', { x: 8, y: y + 3, class: 'lane-label' }).textContent = q;
+  });
+  el('text', { x: 8, y: 636, class: 'lane-label' }).textContent = 'SIDEKIQ QUEUES';
+
+  const gTraces = el('g', { id: 'traces' });
+  const gNodes = el('g', { id: 'nodes' });
+  const gPads = el('g', { id: 'pads' });
+
+  const traceEls = {};
+  edges.forEach(e => {
+    const p = el('path', { d: route(e), class: 'trace ' + e.kind, 'marker-end': e.kind === 'async' ? 'url(#arr-async)' : 'url(#arr)' }, gTraces);
+    traceEls[e.id] = p;
+  });
+
+  const KIND_COLOR = { controller: 'var(--kind-controller)', service: 'var(--kind-service)', model: 'var(--kind-model)', worker: 'var(--kind-worker)', adapter: 'var(--kind-adapter)' };
+  const nodeEls = {};
+  nodes.forEach(n => {
+    const g = el('g', { class: 'chip', 'data-id': n.id, tabindex: 0, role: 'button' }, gNodes);
+    el('rect', { x: n.x, y: n.y, width: W, height: H, rx: 3, stroke: KIND_COLOR[n.kind] }, g);
+    // pins
+    for (let i = 0; i < 4; i++) el('rect', { x: n.x - 4, y: n.y + 6 + i * 8, width: 4, height: 4, fill: KIND_COLOR[n.kind] }, g);
+    for (let i = 0; i < 4; i++) el('rect', { x: n.x + W, y: n.y + 6 + i * 8, width: 4, height: 4, fill: KIND_COLOR[n.kind] }, g);
+    el('text', { x: n.x + 8, y: n.y + 17, class: 'kind' }, g).textContent = (n.kind + (n.queue ? ' · ' + n.queue : '')).toUpperCase();
+    el('text', { x: n.x + 8, y: n.y + 32 }, g).textContent = n.label;
+    nodeEls[n.id] = g;
+    g.addEventListener('click', () => selectNode(n.id));
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); selectNode(n.id); } });
+  });
+
+  const padEls = {};
+  pads.forEach(p => {
+    const g = el('g', { class: 'pad', 'data-id': p.id, tabindex: 0, role: 'button' }, gPads);
+    if (p.side === 'left') {
+      const y = ROW_Y(p.row) + 20;
+      el('circle', { cx: 20, cy: y, r: 7 }, g);
+      el('text', { x: COLS.A, y: ROW_Y(p.row) - 6 }, g).textContent = p.method + ' ' + p.path;
+      g.addEventListener('click', () => selectEndpoint(p.id));
+      g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); selectEndpoint(p.id); } });
+    } else if (p.side === 'right') {
+      const y = ROW_Y(p.row) + 20;
+      el('circle', { cx: 1272, cy: y, r: 7 }, g);
+      el('text', { x: 1262, y: y - 12, 'text-anchor': 'end' }, g).textContent = p.label;
+      g.addEventListener('click', () => selectNode(p.id));
+    } else {
+      el('circle', { cx: 1000, cy: RAIL_Y, r: 7 }, g);
+      el('text', { x: 1012, y: RAIL_Y + 4 }, g).textContent = p.label;
+      el('text', { x: 764, y: RAIL_Y - 6, class: 'rail-label' }, g).textContent = 'DB RAIL';
+      g.addEventListener('click', () => selectNode(p.id));
+    }
+    padEls[p.id] = g;
+  });
+
+  // ---------- interaction ----------
+  const inspBody = document.getElementById('insp-body');
+  const btnWrap = document.getElementById('endpoint-buttons');
+  const epButtons = {};
+  pads.filter(p => p.side === 'left').forEach(p => {
+    const b = document.createElement('button');
+    b.textContent = p.method + ' ' + p.path.replace('/api/v1', '');
+    b.id = 'btn-' + p.id;
+    b.addEventListener('click', () => selectEndpoint(p.id));
+    btnWrap.appendChild(b); epButtons[p.id] = b;
+  });
+
+  let seamMode = false;
+  function clearStates() {
+    Object.values(traceEls).forEach(t => { t.classList.remove('lit', 'dim'); t.setAttribute('marker-end', t.classList.contains('async') ? 'url(#arr-async)' : 'url(#arr)'); });
+    Object.values(nodeEls).forEach(n => n.classList.remove('dim', 'sel'));
+    Object.values(padEls).forEach(n => n.classList.remove('dim', 'sel', 'lit'));
+    Object.values(epButtons).forEach(b => b.classList.remove('active'));
+  }
+  function lightEdges(edgeIds, nodeIds) {
+    edges.forEach(e => {
+      const t = traceEls[e.id];
+      if (edgeIds.has(e.id)) { t.classList.add('lit'); t.setAttribute('marker-end', 'url(#arr-lit)'); } else t.classList.add('dim');
+    });
+    nodes.forEach(n => { if (!nodeIds.has(n.id)) nodeEls[n.id].classList.add('dim'); });
+    pads.forEach(p => { if (!nodeIds.has(p.id)) padEls[p.id].classList.add('dim'); else padEls[p.id].classList.add('lit'); });
+  }
+  function selectEndpoint(id) {
+    clearStates();
+    const r = reach[id], p = byId[id];
+    lightEdges(r.edges, r.nodes);
+    padEls[id].classList.add('sel'); epButtons[id].classList.add('active');
+    const chips = nodes.filter(n => r.nodes.has(n.id));
+    const asyncHops = edges.filter(e => r.edges.has(e.id) && e.kind === 'async').length;
+    const io = pads.filter(x => x.side !== 'left' && r.nodes.has(x.id)).map(x => x.label);
+    inspBody.innerHTML = `<dl>
+      <dt>endpoint</dt><dd>${p.method} ${p.path}</dd>
+      <dt>entry</dt><dd>${byId[p.entry].name}</dd>
+      <dt>chips on path</dt><dd>${chips.length}</dd>
+      <dt>queue hops</dt><dd>${asyncHops}</dd>
+      <dt>touches</dt><dd>${io.join(', ') || 'nothing outside the board'}</dd>
+      <dt>exclusive chips</dt><dd>${chips.filter(n => touchedBy(n.id).length === 1).map(n => n.label).join(', ') || 'none'}</dd>
+    </dl>`;
+    seamText();
+  }
+  function selectNode(id) {
+    clearStates();
+    const n = byId[id];
+    const eps = touchedBy(id);
+    const edgeIds = new Set(edges.filter(e => e.from === id || e.to === id).map(e => e.id));
+    const nodeIds = new Set([id]);
+    edges.forEach(e => { if (e.from === id) nodeIds.add(e.to); if (e.to === id) nodeIds.add(e.from); });
+    eps.forEach(p => nodeIds.add(p.id));
+    lightEdges(edgeIds, nodeIds);
+    (nodeEls[id] || padEls[id]).classList.add('sel');
+    eps.forEach(p => { padEls[p.id].classList.add('lit'); epButtons[p.id].classList.add('active'); });
+    const ins = edges.filter(e => e.to === id).map(e => (byId[e.from].label || byId[e.from].method + ' ' + byId[e.from].path) + (e.kind === 'async' ? ' (queue ' + e.queue + ')' : ''));
+    const outs = edges.filter(e => e.from === id).map(e => (byId[e.to].label || byId[e.to].label === '' ? byId[e.to].label : byId[e.to].label) || byId[e.to].label);
+    const outsTxt = edges.filter(e => e.from === id).map(e => (byId[e.to].label || '') + (e.kind === 'async' ? ' (queue ' + e.queue + ')' : ''));
+    inspBody.innerHTML = `<dl>
+      <dt>name</dt><dd>${n.name || n.label}</dd>
+      ${n.file ? `<dt>file</dt><dd>${n.file}</dd>` : ''}
+      ${n.kind ? `<dt>kind</dt><dd>${n.kind}${n.queue ? ' · Sidekiq queue "' + n.queue + '"' : ''}</dd>` : '<dt>kind</dt><dd>external I/O</dd>'}
+      <dt>reached by</dt><dd><span class="seam">${eps.length} of 6 endpoints</span></dd>
+      <dt>inputs</dt><dd>${ins.join('<br>') || '—'}</dd>
+      <dt>outputs</dt><dd>${outsTxt.join('<br>') || '—'}</dd>
+    </dl>
+    <ul>${eps.map(p => `<li>${p.method} ${p.path}</li>`).join('')}</ul>`;
+    seamText();
+  }
+  function seamHeat(on) {
+    seamMode = on;
+    nodes.forEach(n => {
+      const rect = nodeEls[n.id].querySelector('rect');
+      if (!on) { rect.setAttribute('fill', '#0b1f19'); return; }
+      const k = touchedBy(n.id).length;
+      const heat = ['#0b1f19', '#163b2a', '#4a4a1e', '#7a4a1a', '#9c3a1c', '#b82a1e', '#d11c1c'][Math.min(k, 6)];
+      rect.setAttribute('fill', heat);
+    });
+  }
+  function seamText() {
+    const shared = nodes.map(n => ({ n, k: touchedBy(n.id).length })).filter(x => x.k >= 3).sort((a, b) => b.k - a.k);
+    const single = nodes.filter(n => touchedBy(n.id).length === 1).length;
+    document.getElementById('seam-body').innerHTML = `
+      <p class="note">A chip reached by many endpoints is a junction: cutting there splits every path through it. A chip reached by one endpoint sits inside a seam you can cut along.</p>
+      <dl>
+        <dt>junctions</dt><dd>${shared.map(x => `${x.n.label} <span class="seam">${x.k}</span>`).join('<br>')}</dd>
+        <dt>single-endpoint chips</dt><dd>${single} of ${nodes.length}</dd>
+        <dt>queue lanes</dt><dd>default carries the status write fan-out and local notifications; push carries everything that leaves the box; ingress is the only lane fed by an external caller</dd>
+      </dl>`;
+  }
+  document.getElementById('btn-reset').addEventListener('click', () => { clearStates(); inspBody.innerHTML = '<p class="note">Nothing selected.</p>'; });
+  document.getElementById('btn-seams').addEventListener('click', ev => { seamHeat(!seamMode); ev.currentTarget.classList.toggle('active', seamMode); });
+  document.getElementById('btn-data').addEventListener('click', ev => { const p = document.getElementById('datapanel'); p.hidden = !p.hidden; ev.currentTarget.classList.toggle('active', !p.hidden); });
+
+  // ---------- data map ----------
+  const dataMap = {
+    system: 'mastodon', language: 'ruby', framework: 'rails', captured: 'by hand, 2026-10-30',
+    endpoints: pads.filter(p => p.side === 'left').map(p => ({ id: p.id, method: p.method, path: p.path, entry: p.entry })),
+    externals: pads.filter(p => p.side !== 'left').map(p => ({ id: p.id, name: p.label })),
+    nodes: nodes.map(n => ({ id: n.id, name: n.name, kind: n.kind, file: n.file, ...(n.queue ? { queue: n.queue } : {}) })),
+    edges: edges.filter(e => !byId[e.from].side).map(e => ({ from: e.from, to: e.to, kind: e.kind, ...(e.queue ? { queue: e.queue } : {}) })),
+  };
+  document.getElementById('data-json').textContent = JSON.stringify(dataMap, null, 2);
+
+  seamText();
+  selectEndpoint('e_statuses');
+})();
+</script>
