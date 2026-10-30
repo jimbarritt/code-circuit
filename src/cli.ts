@@ -1,4 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
+import { assertDataMap } from "./datamap.ts";
+import { extractRails } from "./extract/rails.ts";
 import { serveBoard } from "./server.ts";
 import { exportDataMap, importDataMap, openStore } from "./store.ts";
 
@@ -6,7 +8,8 @@ const USAGE = `cc: draw a service as a circuit board
 
 Usage:
   cc render <data-map.json> [--port <n>]   Serve the board for a data map
-  cc extract <rails-checkout> [options]    Write a data map for a Rails app to stdout
+  cc extract <rails-checkout> [--include "METHOD /path"]...
+                                           Write a data map for a Rails app to stdout
   cc import <data-map.json> <store.db>     Load a data map into a SQLite store
   cc export <store.db>                     Write the data map held in a store to stdout
   cc --help                                Show this text
@@ -37,6 +40,15 @@ switch (command) {
     importDataMap(db, JSON.parse(readFileSync(file, "utf8")));
     const server = serveBoard(db, { port });
     process.stdout.write(`${server.url}\n`);
+    break;
+  }
+  case "extract": {
+    const [dir, ...rest] = args;
+    if (!dir || !existsSync(dir)) fail('usage: cc extract <rails-checkout> [--include "METHOD /path"]...');
+    const include: string[] = [];
+    for (let i = 0; i < rest.length; i++) if (rest[i] === "--include") include.push(rest[++i]);
+    const map = extractRails(dir, { include: include.length ? include : undefined });
+    process.stdout.write(JSON.stringify(assertDataMap(map), null, 2) + "\n");
     break;
   }
   case "import": {
