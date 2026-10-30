@@ -109,3 +109,7 @@ TypeScript on [Bun](https://bun.sh). SQLite through `bun:sqlite`. The Ruby extra
 ## Licence
 
 To be decided.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

@@ -226,6 +226,7 @@ jobs:
             desc "Draw a service as a circuit board from a machine-readable data map"
             homepage "https://github.com/$GITHUB_REPOSITORY"
             version "$version"
+            license "MIT"
 
             on_macos do
               on_arm do
