@@ -6,7 +6,7 @@ Endpoints sit on the edge of the board as pads. Modules, classes and functions a
 
 The purpose is navigation. In a large repository or a monorepo with many endpoints, the board shows which chips many endpoints share and which sit inside a single path. A chip reached by one endpoint is a candidate seam.
 
-**Status: sketch.** A hand-drawn board of six Mastodon endpoints exists in [src/html/sketch/](src/html/sketch/). The product does not exist yet. The work is defined in [issue 1](../../issues/1).
+**Status: first version.** `cc extract` reads a Rails app and `cc render` draws the data map. A hand-drawn board of six Mastodon endpoints stays in [src/html/sketch/](src/html/sketch/) and is unchanged. The mission report is [docs/report.md](docs/report.md). The layout rules are in [docs/layout-rules.md](docs/layout-rules.md).
 
 ## How it works
 
@@ -52,9 +52,43 @@ cc render mastodon.json
 
 `render` prints a local URL. Open it.
 
+Without options, `extract` writes every route of the app. For a Rails app of Mastodon's size, that gives a board too large to read. Name the endpoints to keep with `--include`. Parameter names do not matter in a match.
+
+```bash
+cc extract ~/src/mastodon \
+  --include "POST /api/v1/statuses" \
+  --include "GET /api/v1/timelines/home" \
+  --include "POST /api/v1/statuses/:id/favourite" \
+  --include "POST /api/v1/accounts/:id/follow" \
+  --include "POST /inbox" \
+  --include "GET /api/v1/notifications" > mastodon.json
+```
+
+The result for these six endpoints is in [docs/e2e/mastodon-data-map.json](docs/e2e/mastodon-data-map.json). The board for it is [docs/img/mastodon-board.png](docs/img/mastodon-board.png).
+
+On the board:
+
+- Click a pad to light the path reachable from it. The rest dims.
+- Click a chip to list the endpoints whose paths reach it. The inspector shows the rule that made each edge.
+- Tab to a pad or chip and press Enter or Space to do the same.
+
+The other two commands move a data map in and out of SQLite.
+
+```bash
+cc import mastodon.json store.db
+cc export store.db > copy.json
+```
+
+## Test
+
+```bash
+bun test
+CC_MASTODON=~/src/mastodon bun test    # also runs the extractor on a Mastodon checkout
+```
+
 ## Stack
 
-TypeScript on [Bun](https://bun.sh). SQLite through `bun:sqlite`. Tree-sitter for parsing. SVG in the browser for the board.
+TypeScript on [Bun](https://bun.sh). SQLite through `bun:sqlite`. The Ruby extractor reads source with line-based rules, not a parser. SVG in the browser for the board, with no library.
 
 ## Test system
 

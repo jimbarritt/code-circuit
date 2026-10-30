@@ -21,8 +21,8 @@ A chip occupies a rectangle in a column and a row. A trace runs only in gutters,
 
 ## Placement rules
 
-1. **Column is depth.** The column of a chip is the length of the longest path from an entry node to the chip. Edges that close a cycle do not count. A chip with no incoming edge and no endpoint is a root and has depth 0.
-2. **Entry nodes sit in column 0.** An endpoint pad sits to the left of column 0 at the height of its entry chip. An edge into an entry chip does not count towards depth. It is drawn as a call that loops back, by routing rule 2.
+1. **Column is depth.** The column of a chip is the length of the shortest path from an entry node to the chip. A chip that no entry node reaches starts its own search at depth 0.
+2. **Entry nodes sit in column 0.** An endpoint pad sits to the left of column 0 at the height of its entry chip. An edge into an entry chip is drawn as a call that loops back, by routing rule 2.
 3. **Row is the barycentre.** Chips in a column are ordered by the mean row of the chips they connect to in other columns. Four sweeps alternate left to right and right to left. Ties keep the order of the data map.
 4. **Overflow column.** The board has at most 8 ordinary columns. A chip of depth 8 or more goes to one overflow column on the right. The renderer logs each such chip. The overflow column is the only place a chip is placed out of rule 1.
 5. **Externals.** External pads sit on the right edge. They are ordered by the mean row of the chips that call them and spread over the rows.
@@ -33,10 +33,9 @@ Every trace leaves the right edge of its source chip and enters the left edge of
 
 1. **Forward calls go right.** A sync call to the next column goes out into the gutter on the right of the source, runs along the gutter to the height of the target, and enters the target on its left edge.
 2. **Same-column and backward calls loop back through the gutter.** A sync call to the same column or to an earlier column leaves into the gutter on the right of the source, runs to the channel next to the target row, runs along the channel to the gutter on the left of the target, and runs along that gutter to the height of the target.
-3. **Calls that skip a column use a channel.** A sync call to a column more than one place to the right takes the route of rule 2. The channel keeps it clear of the chips in between.
-4. **Queue hops drop to a lane and climb into the target.** An async edge leaves into the gutter on the right of the source, runs down to the lane of its queue, runs along the lane to the gutter on the left of the target, and runs up that gutter to the height of the target.
-5. **I/O runs to the right edge.** An io edge leaves into the gutter on the right of the source, runs to the channel below the source row, runs along it to the last gutter, runs along the last gutter to the height of the external pad, and ends on the pad.
-6. **Endpoint traces are straight.** An endpoint pad connects to its entry chip with a horizontal line.
+3. **Queue hops drop to a lane and climb into the target.** An async edge leaves into the gutter on the right of the source, runs down to the lane of its queue, runs along the lane to the gutter on the left of the target, and runs up that gutter to the height of the target.
+4. **I/O runs to the right edge.** An io edge leaves into the gutter on the right of the source, runs to the channel below the source row, runs along it to the last gutter, runs along the last gutter to the height of the external pad, and ends on the pad.
+5. **Endpoint traces are straight.** An endpoint pad connects to its entry chip with a horizontal line.
 
 ## Record of the rule
 

@@ -18,7 +18,7 @@ export function serveBoard(db: Database, opts: { port?: number; title?: string }
       const url = new URL(req.url);
       switch (url.pathname) {
         case "/":
-          return new Response(PAGE, { headers: { "content-type": "text/html; charset=utf-8" } });
+          return new Response(PAGE as unknown as string, { headers: { "content-type": "text/html; charset=utf-8" } });
         case "/api/board":
           return json(board);
         case "/api/datamap":

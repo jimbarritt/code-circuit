@@ -82,46 +82,25 @@ export function layoutBoard(map: DataMap): Board {
   const nodeById = new Map(map.nodes.map((n) => [n.id, n]));
   const entryIds = new Set(map.endpoints.map((e) => e.entry));
 
-  // ---- rule 1 and 2: depth, with entry nodes pinned to column 0 ----
+  // ---- rule 1 and 2: depth is the shortest path from an entry node ----
   const out = new Map<string, number[]>();
   map.edges.forEach((e, i) => {
     if (nodeById.has(e.to)) (out.get(e.from) ?? out.set(e.from, []).get(e.from)!).push(i);
   });
-  const back = new Set<number>();
-  const state = new Map<string, 0 | 1 | 2>(); // 1 = on stack, 2 = done
-  const visit = (start: string) => {
-    if (state.has(start)) return;
-    const stack: { id: string; k: number }[] = [{ id: start, k: 0 }];
-    state.set(start, 1);
-    while (stack.length) {
-      const top = stack[stack.length - 1];
-      const es = out.get(top.id) ?? [];
-      if (top.k >= es.length) { state.set(top.id, 2); stack.pop(); continue; }
-      const ei = es[top.k++];
-      const to = map.edges[ei].to;
-      const s = state.get(to);
-      if (s === 1) back.add(ei);
-      else if (!s) { state.set(to, 1); stack.push({ id: to, k: 0 }); }
+  const depth = new Map<string, number>();
+  const bfs = (starts: string[]) => {
+    const queue = starts.filter((id) => !depth.has(id));
+    queue.forEach((id) => depth.set(id, 0));
+    while (queue.length) {
+      const id = queue.shift()!;
+      for (const i of out.get(id) ?? []) {
+        const to = map.edges[i].to;
+        if (!depth.has(to)) { depth.set(to, depth.get(id)! + 1); queue.push(to); }
+      }
     }
   };
-  [...entryIds].forEach(visit);
-  map.nodes.forEach((n) => visit(n.id));
-
-  const structural = (i: number) => !back.has(i) && !entryIds.has(map.edges[i].to) && nodeById.has(map.edges[i].to);
-  const indeg = new Map(map.nodes.map((n) => [n.id, 0]));
-  map.edges.forEach((e, i) => { if (structural(i)) indeg.set(e.to, indeg.get(e.to)! + 1); });
-  const depth = new Map(map.nodes.map((n) => [n.id, 0]));
-  const ready = map.nodes.filter((n) => indeg.get(n.id) === 0).map((n) => n.id);
-  while (ready.length) {
-    const id = ready.shift()!;
-    for (const i of out.get(id) ?? []) {
-      if (!structural(i)) continue;
-      const to = map.edges[i].to;
-      depth.set(to, Math.max(depth.get(to)!, depth.get(id)! + 1));
-      indeg.set(to, indeg.get(to)! - 1);
-      if (indeg.get(to) === 0) ready.push(to);
-    }
-  }
+  bfs([...entryIds].filter((id) => nodeById.has(id)));
+  for (const n of map.nodes) bfs([n.id]);
 
   // ---- rule 4: overflow column ----
   const overflow: string[] = [];

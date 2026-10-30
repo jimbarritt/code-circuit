@@ -52,16 +52,24 @@ test("a queue hop runs along the lane of its queue", () => {
   expect(Math.max(...ys)).toBeLessThan(laneY + 20);
 });
 
-test("a sync call that skips a column runs along a channel between rows", () => {
+test("a sync call to the same or an earlier column runs along a channel between rows", () => {
   const b = layoutBoard(sketch());
   const nodes = new Map(b.nodes.map((n) => [n.id, n]));
-  const skip = b.traces.filter((t) => t.kind === "sync" && nodes.has(t.from) && nodes.get(t.to)!.column - nodes.get(t.from)!.column >= 2);
-  expect(skip.length).toBeGreaterThan(0);
-  for (const t of skip) {
-    // the long horizontal run lies in no chip's vertical extent
-    const long = t.points.slice(1).map((p, i) => [t.points[i], p]).filter(([a, c]) => a[1] === c[1] && Math.abs(a[0] - c[0]) > 190);
+  const back = b.traces.filter((t) => t.kind === "sync" && nodes.has(t.from) && nodes.get(t.to)!.column <= nodes.get(t.from)!.column);
+  expect(back.length).toBeGreaterThan(0);
+  for (const t of back) {
+    const long = t.points.slice(1).map((p, i) => [t.points[i], p]).filter(([a, c]) => a[1] === c[1] && Math.abs(a[0] - c[0]) > 100);
     expect(long.length).toBeGreaterThan(0);
     for (const [a] of long) expect(b.nodes.some((n) => a[1] > n.y && a[1] < n.y + n.h)).toBe(false);
+  }
+});
+
+test("a forward sync call never skips a column", () => {
+  const b = layoutBoard(sketch());
+  const nodes = new Map(b.nodes.map((n) => [n.id, n]));
+  for (const t of b.traces) {
+    if (t.kind === "io" || !nodes.has(t.from) || !nodes.has(t.to)) continue;
+    expect(nodes.get(t.to)!.column - nodes.get(t.from)!.column).toBeLessThanOrEqual(1);
   }
 });
 

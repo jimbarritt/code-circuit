@@ -147,8 +147,10 @@ export function extractRails(root: string, opts: ExtractOptions = {}): DataMap {
   const RULE: Record<string, string> = {};
   while (work.length) {
     const { id, info, action } = work.shift()!;
-    const code = action ? methodWithHelpers(info.code, action)! : info.code;
-    const raw = action ? methodWithHelpers(stripRuby(info.raw, true), action) ?? "" : stripRuby(info.raw, true);
+    // the superclass named in `class A < B` is inheritance, not a call
+    const noDecl = (t: string) => t.replace(/^(\s*)class\s+[\w:]+(\s*<\s*[\w:]+)?/gm, "$1");
+    const code = noDecl(action ? methodWithHelpers(info.code, action)! : info.code);
+    const raw = noDecl(action ? methodWithHelpers(stripRuby(info.raw, true), action) ?? "" : stripRuby(info.raw, true));
 
     // a model follows only adapters and queue hops; adapters follow nothing
     const follows = (kind: Kind) => info.kind !== "adapter" && (info.kind !== "model" || kind === "adapter");

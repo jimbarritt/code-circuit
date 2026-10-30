@@ -116,3 +116,8 @@ test("routeKey treats parameter names as equal", () => {
 test("stripRuby keeps the braces around an interpolation when it keeps strings", () => {
   expect(stripRuby(`x = "a #{b} c"`, true)).toBe(`x = "a #{b} c"`);
 });
+
+test("a superclass in a class declaration is not a call", () => {
+  expect(map.nodes.some((n) => n.id === "BaseService")).toBe(false);
+  expect(map.edges.some((e) => e.to === "BaseService" || e.to === "ApplicationRecord")).toBe(false);
+});
