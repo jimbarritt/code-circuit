@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Done. All 15 tasks reached `done`. `bun test` passes with 58 tests. `bun run build` produces one binary, `cc`.
+Done. All 15 tasks reached `done`. `bun test` passes with 57 tests, and 58 when `CC_MASTODON` points at a Mastodon checkout. `bun run build` produces one binary, `cc`.
 
 | Task | Attempts |
 |---|---|
