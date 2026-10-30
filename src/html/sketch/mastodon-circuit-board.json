@@ -1,0 +1,479 @@
+{
+  "system": "mastodon",
+  "language": "ruby",
+  "framework": "rails",
+  "captured": "by hand, 2026-10-30",
+  "endpoints": [
+    {
+      "id": "e_statuses",
+      "method": "POST",
+      "path": "/api/v1/statuses",
+      "entry": "c_statuses"
+    },
+    {
+      "id": "e_home",
+      "method": "GET",
+      "path": "/api/v1/timelines/home",
+      "entry": "c_home"
+    },
+    {
+      "id": "e_fav",
+      "method": "POST",
+      "path": "/api/v1/statuses/:id/favourite",
+      "entry": "c_fav"
+    },
+    {
+      "id": "e_follow",
+      "method": "POST",
+      "path": "/api/v1/accounts/:id/follow",
+      "entry": "c_follow"
+    },
+    {
+      "id": "e_inbox",
+      "method": "POST",
+      "path": "/inbox",
+      "entry": "c_inbox"
+    },
+    {
+      "id": "e_notif",
+      "method": "GET",
+      "path": "/api/v1/notifications",
+      "entry": "c_notif"
+    }
+  ],
+  "externals": [
+    {
+      "id": "x_pg",
+      "name": "PostgreSQL"
+    },
+    {
+      "id": "x_redis",
+      "name": "Redis"
+    },
+    {
+      "id": "x_remote",
+      "name": "Remote AP servers"
+    },
+    {
+      "id": "x_push",
+      "name": "Web Push gateways"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "c_statuses",
+      "name": "Api::V1::StatusesController#create",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/statuses_controller.rb"
+    },
+    {
+      "id": "c_home",
+      "name": "Api::V1::Timelines::HomeController#show",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/timelines/home_controller.rb"
+    },
+    {
+      "id": "c_fav",
+      "name": "Api::V1::Statuses::FavouritesController#create",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/statuses/favourites_controller.rb"
+    },
+    {
+      "id": "c_follow",
+      "name": "Api::V1::AccountsController#follow",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/accounts_controller.rb"
+    },
+    {
+      "id": "c_inbox",
+      "name": "ActivityPub::InboxesController#create",
+      "kind": "controller",
+      "file": "app/controllers/activitypub/inboxes_controller.rb"
+    },
+    {
+      "id": "w_ap_processing",
+      "name": "ActivityPub::ProcessingWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/processing_worker.rb",
+      "queue": "ingress"
+    },
+    {
+      "id": "c_notif",
+      "name": "Api::V1::NotificationsController#index",
+      "kind": "controller",
+      "file": "app/controllers/api/v1/notifications_controller.rb"
+    },
+    {
+      "id": "s_post",
+      "name": "PostStatusService",
+      "kind": "service",
+      "file": "app/services/post_status_service.rb"
+    },
+    {
+      "id": "s_mentions",
+      "name": "ProcessMentionsService",
+      "kind": "service",
+      "file": "app/services/process_mentions_service.rb"
+    },
+    {
+      "id": "s_hashtags",
+      "name": "ProcessHashtagsService",
+      "kind": "service",
+      "file": "app/services/process_hashtags_service.rb"
+    },
+    {
+      "id": "s_fav",
+      "name": "FavouriteService",
+      "kind": "service",
+      "file": "app/services/favourite_service.rb"
+    },
+    {
+      "id": "s_follow",
+      "name": "FollowService",
+      "kind": "service",
+      "file": "app/services/follow_service.rb"
+    },
+    {
+      "id": "s_process_status",
+      "name": "ActivityPub::ProcessStatusService (via ProcessCollectionService and Activity::Create)",
+      "kind": "service",
+      "file": "app/services/activitypub/process_status_service.rb"
+    },
+    {
+      "id": "m_status",
+      "name": "Status (ActiveRecord)",
+      "kind": "model",
+      "file": "app/models/status.rb"
+    },
+    {
+      "id": "m_account",
+      "name": "Account (ActiveRecord)",
+      "kind": "model",
+      "file": "app/models/account.rb"
+    },
+    {
+      "id": "m_favourite",
+      "name": "Favourite (ActiveRecord)",
+      "kind": "model",
+      "file": "app/models/favourite.rb"
+    },
+    {
+      "id": "m_follow",
+      "name": "Follow (ActiveRecord)",
+      "kind": "model",
+      "file": "app/models/follow.rb"
+    },
+    {
+      "id": "m_home_feed",
+      "name": "HomeFeed",
+      "kind": "model",
+      "file": "app/models/home_feed.rb"
+    },
+    {
+      "id": "w_local_notif",
+      "name": "LocalNotificationWorker",
+      "kind": "worker",
+      "file": "app/workers/local_notification_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "w_linkcrawl",
+      "name": "LinkCrawlWorker",
+      "kind": "worker",
+      "file": "app/workers/link_crawl_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "w_distribution",
+      "name": "DistributionWorker",
+      "kind": "worker",
+      "file": "app/workers/distribution_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "w_fanout",
+      "name": "FanOutOnWriteWorker",
+      "kind": "worker",
+      "file": "app/workers/fan_out_on_write_worker.rb",
+      "queue": "default"
+    },
+    {
+      "id": "w_ap_dist",
+      "name": "ActivityPub::DistributionWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/distribution_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "w_ap_delivery",
+      "name": "ActivityPub::DeliveryWorker",
+      "kind": "worker",
+      "file": "app/workers/activitypub/delivery_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "w_merge",
+      "name": "MergeWorker",
+      "kind": "worker",
+      "file": "app/workers/merge_worker.rb",
+      "queue": "pull"
+    },
+    {
+      "id": "s_notify",
+      "name": "NotifyService",
+      "kind": "service",
+      "file": "app/services/notify_service.rb"
+    },
+    {
+      "id": "a_feedmanager",
+      "name": "FeedManager (Redis list ops)",
+      "kind": "adapter",
+      "file": "app/lib/feed_manager.rb"
+    },
+    {
+      "id": "a_request",
+      "name": "Request (signed outbound HTTP)",
+      "kind": "adapter",
+      "file": "app/lib/request.rb"
+    },
+    {
+      "id": "w_webpush",
+      "name": "Web::PushNotificationWorker",
+      "kind": "worker",
+      "file": "app/workers/web/push_notification_worker.rb",
+      "queue": "push"
+    },
+    {
+      "id": "m_notification",
+      "name": "Notification (ActiveRecord)",
+      "kind": "model",
+      "file": "app/models/notification.rb"
+    }
+  ],
+  "edges": [
+    {
+      "from": "c_statuses",
+      "to": "s_post",
+      "kind": "sync"
+    },
+    {
+      "from": "s_post",
+      "to": "s_mentions",
+      "kind": "sync"
+    },
+    {
+      "from": "s_post",
+      "to": "s_hashtags",
+      "kind": "sync"
+    },
+    {
+      "from": "s_post",
+      "to": "m_status",
+      "kind": "sync"
+    },
+    {
+      "from": "s_mentions",
+      "to": "m_account",
+      "kind": "sync"
+    },
+    {
+      "from": "c_home",
+      "to": "m_home_feed",
+      "kind": "sync"
+    },
+    {
+      "from": "m_home_feed",
+      "to": "a_feedmanager",
+      "kind": "sync"
+    },
+    {
+      "from": "c_fav",
+      "to": "s_fav",
+      "kind": "sync"
+    },
+    {
+      "from": "s_fav",
+      "to": "m_favourite",
+      "kind": "sync"
+    },
+    {
+      "from": "c_follow",
+      "to": "s_follow",
+      "kind": "sync"
+    },
+    {
+      "from": "s_follow",
+      "to": "m_follow",
+      "kind": "sync"
+    },
+    {
+      "from": "w_ap_processing",
+      "to": "s_process_status",
+      "kind": "sync"
+    },
+    {
+      "from": "s_process_status",
+      "to": "m_status",
+      "kind": "sync"
+    },
+    {
+      "from": "c_notif",
+      "to": "m_notification",
+      "kind": "sync"
+    },
+    {
+      "from": "w_fanout",
+      "to": "a_feedmanager",
+      "kind": "sync"
+    },
+    {
+      "from": "w_merge",
+      "to": "a_feedmanager",
+      "kind": "sync"
+    },
+    {
+      "from": "w_ap_delivery",
+      "to": "a_request",
+      "kind": "sync"
+    },
+    {
+      "from": "w_local_notif",
+      "to": "s_notify",
+      "kind": "sync"
+    },
+    {
+      "from": "s_notify",
+      "to": "m_notification",
+      "kind": "sync"
+    },
+    {
+      "from": "s_post",
+      "to": "w_distribution",
+      "kind": "async",
+      "queue": "default"
+    },
+    {
+      "from": "s_post",
+      "to": "w_ap_dist",
+      "kind": "async",
+      "queue": "push"
+    },
+    {
+      "from": "s_post",
+      "to": "w_linkcrawl",
+      "kind": "async",
+      "queue": "pull"
+    },
+    {
+      "from": "w_distribution",
+      "to": "w_fanout",
+      "kind": "async",
+      "queue": "default"
+    },
+    {
+      "from": "w_ap_dist",
+      "to": "w_ap_delivery",
+      "kind": "async",
+      "queue": "push"
+    },
+    {
+      "from": "s_mentions",
+      "to": "w_local_notif",
+      "kind": "async",
+      "queue": "default"
+    },
+    {
+      "from": "s_fav",
+      "to": "w_local_notif",
+      "kind": "async",
+      "queue": "default"
+    },
+    {
+      "from": "s_fav",
+      "to": "w_ap_dist",
+      "kind": "async",
+      "queue": "push"
+    },
+    {
+      "from": "s_follow",
+      "to": "w_local_notif",
+      "kind": "async",
+      "queue": "default"
+    },
+    {
+      "from": "s_follow",
+      "to": "w_merge",
+      "kind": "async",
+      "queue": "pull"
+    },
+    {
+      "from": "s_follow",
+      "to": "w_ap_delivery",
+      "kind": "async",
+      "queue": "push"
+    },
+    {
+      "from": "c_inbox",
+      "to": "w_ap_processing",
+      "kind": "async",
+      "queue": "ingress"
+    },
+    {
+      "from": "s_process_status",
+      "to": "w_distribution",
+      "kind": "async",
+      "queue": "default"
+    },
+    {
+      "from": "s_notify",
+      "to": "w_webpush",
+      "kind": "async",
+      "queue": "push"
+    },
+    {
+      "from": "m_status",
+      "to": "x_pg",
+      "kind": "io"
+    },
+    {
+      "from": "m_account",
+      "to": "x_pg",
+      "kind": "io"
+    },
+    {
+      "from": "m_favourite",
+      "to": "x_pg",
+      "kind": "io"
+    },
+    {
+      "from": "m_follow",
+      "to": "x_pg",
+      "kind": "io"
+    },
+    {
+      "from": "m_home_feed",
+      "to": "x_pg",
+      "kind": "io"
+    },
+    {
+      "from": "m_notification",
+      "to": "x_pg",
+      "kind": "io"
+    },
+    {
+      "from": "a_feedmanager",
+      "to": "x_redis",
+      "kind": "io"
+    },
+    {
+      "from": "a_request",
+      "to": "x_remote",
+      "kind": "io"
+    },
+    {
+      "from": "w_webpush",
+      "to": "x_push",
+      "kind": "io"
+    }
+  ]
+}
