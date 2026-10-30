@@ -47,3 +47,30 @@ test("a data map change in the store shows in the next query, so no copy is cach
   const r: any = await (await get("/api/reach?endpoint=e_notif")).json();
   expect(r.nodes).toEqual(["c_notif"]);
 });
+
+test("the board for a TypeScript data map carries kinds, modules and lanes", async () => {
+  const tdb = openStore();
+  importDataMap(tdb, JSON.parse(readFileSync(new URL("./fixtures/ts-sample-map.json", import.meta.url).pathname, "utf8")));
+  const ts = serveBoard(tdb);
+  try {
+    const b: any = await (await fetch(new URL("/api/board", ts.url))).json();
+    expect(b.title).toBe("acme-shop circuit board");
+    expect(b.modules).toHaveLength(3);
+    expect(b.nodes.every((n: any) => n.module)).toBe(true);
+    expect(b.pads.find((p: any) => p.id === "@acme/orders-service:KAFKA:payments.payment.captured.v1")).toMatchObject({ kind: "message", protocol: "kafka", line: 15 });
+    expect(b.pads.find((p: any) => p.id === "cloud:aws-ses")).toMatchObject({ kind: "cloud", label: "AWS SES" });
+    expect(b.lanes.map((l: any) => l.queue)).toContain("orders.order.created.v1");
+    expect(findCrossings(b)).toEqual([]);
+    const r: any = await (await fetch(new URL("/api/reach?endpoint=" + encodeURIComponent("@acme/api:POST:/users"), ts.url))).json();
+    expect(r.nodes).toContain("@acme/notification-worker:AuditConsumer");
+  } finally {
+    ts.stop(true);
+  }
+});
+
+test("the page styles every endpoint, chip and external kind the extractors produce", async () => {
+  const html = await (await get("/")).text();
+  for (const k of ["http", "grpc", "graphql", "message", "queue", "cron", "websocket"]) expect(html).toContain(`--ep-${k}:`);
+  for (const k of ["controller", "resolver", "consumer", "worker", "gateway", "service", "repository", "client", "function", "model", "adapter"]) expect(html).toContain(`--kind-${k}:`);
+  for (const k of ["database", "cache", "message-out", "queue-out", "http-out", "grpc-out", "cloud"]) expect(html).toContain(`--ext-${k}:`);
+});

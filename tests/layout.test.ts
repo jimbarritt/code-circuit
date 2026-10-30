@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import type { DataMap } from "../src/datamap.ts";
-import { MAX_COLUMNS, findCrossings, layoutBoard, shortLabel } from "../src/layout.ts";
+import { assertDataMap, type DataMap } from "../src/datamap.ts";
+import { EP_STEP, MAX_COLUMNS, endpointKind, externalKind, findCrossings, layoutBoard, shortLabel, shortMiddle } from "../src/layout.ts";
 import { SKETCH_JSON } from "./helpers/sketch.ts";
 
 const sketch = (): DataMap => JSON.parse(readFileSync(SKETCH_JSON, "utf8"));
+const TS_SAMPLE = new URL("./fixtures/ts-sample-map.json", import.meta.url).pathname;
+const tsSample = (): DataMap => JSON.parse(readFileSync(TS_SAMPLE, "utf8"));
 
 test("no trace crosses a chip on the sketch data map", () => {
   const b = layoutBoard(sketch());
@@ -141,4 +143,101 @@ test("shortLabel drops namespaces and truncates", () => {
   expect(shortLabel("Status (ActiveRecord)")).toBe("Status");
   expect(shortLabel("Api::V1::Statuses::FavouritesController#create")).toBe("FavouritesController#create");
   expect(shortLabel("A".repeat(40)).length).toBe(27);
+});
+
+test("the TypeScript sample map is valid and lays out with no crossing", () => {
+  const m = assertDataMap(tsSample());
+  const b = layoutBoard(m);
+  expect(m.endpoints.length).toBeGreaterThanOrEqual(25);
+  expect(b.nodes).toHaveLength(m.nodes.length);
+  expect(b.traces).toHaveLength(m.edges.length + m.endpoints.length);
+  expect(findCrossings(b)).toEqual([]);
+});
+
+test("every endpoint pad carries its kind, and pads of one chip do not overlap", () => {
+  const m = tsSample();
+  const b = layoutBoard(m);
+  const pads = b.pads.filter((p) => p.side === "left");
+  expect(new Set(pads.map((p) => p.kind))).toEqual(new Set(["http", "graphql", "websocket", "grpc", "message", "queue", "cron"]));
+  const ys = pads.map((p) => p.y);
+  expect(new Set(ys).size).toBe(ys.length);
+  const nodes = new Map(b.nodes.map((n) => [n.id, n]));
+  for (const p of pads) {
+    const n = nodes.get(p.entry!)!;
+    expect(p.y).toBeGreaterThan(n.y);
+    expect(p.y).toBeLessThan(n.y + n.h);
+    expect(p.x).toBeLessThan(b.left);
+    const t = b.traces.find((t) => t.id === "ep:" + p.id)!;
+    expect(t.points[0][1]).toBe(p.y);
+  }
+  const users = nodes.get("@acme/api:UsersController")!;
+  expect(users.h).toBeGreaterThanOrEqual(5 * EP_STEP);
+  const grpc = pads.find((p) => p.method === "GRPC")!;
+  expect(grpc).toMatchObject({ protocol: "grpc", module: "@acme/orders-service", file: "apps/orders-service/src/orders/orders.grpc.controller.ts", line: 17 });
+});
+
+test("each module takes its own band of rows, in the order of the data map", () => {
+  const b = layoutBoard(tsSample());
+  expect(b.modules.map((m) => m.name)).toEqual(["@acme/api", "@acme/orders-service", "@acme/notification-worker"]);
+  for (let i = 1; i < b.modules.length; i++) expect(b.modules[i].top).toBeGreaterThanOrEqual(b.modules[i - 1].bottom);
+  const band = new Map(b.modules.map((m) => [m.name, m]));
+  for (const n of b.nodes) {
+    const m = band.get(n.module!)!;
+    expect(n.y).toBeGreaterThan(m.top);
+    expect(n.y + n.h).toBeLessThanOrEqual(m.bottom);
+  }
+});
+
+test("a map with one module or none has no module bands and keeps its rows", () => {
+  expect(layoutBoard(sketch()).modules).toEqual([]);
+  const m = tsSample();
+  for (const n of m.nodes) n.module = "one";
+  expect(layoutBoard(m).modules).toEqual([]);
+});
+
+test("a topic or queue name with dots gets its own lane", () => {
+  const b = layoutBoard(tsSample());
+  expect(b.lanes.map((l) => l.queue)).toEqual(["audit.user.created", "email.send", "orders.order.created.v1", "sms.send"]);
+  const lane = b.lanes.find((l) => l.queue === "orders.order.created.v1")!;
+  const hop = b.traces.find((t) => t.kind === "async" && t.queue === "orders.order.created.v1")!;
+  expect(Math.max(...hop.points.map((p) => p[1]))).toBeGreaterThanOrEqual(lane.y);
+  expect(Math.max(...hop.points.map((p) => p[1]))).toBeLessThan(lane.y + 20);
+});
+
+test("long names are shortened so labels keep to their areas", () => {
+  const b = layoutBoard(tsSample());
+  for (const p of b.pads) expect(p.short!.length).toBeLessThanOrEqual(p.side === "left" ? 44 : 32);
+  const long = b.pads.find((p) => p.path?.endsWith("/download"))!;
+  expect(long.short).toContain("…");
+  expect(long.short!.startsWith("/orders/")).toBe(true);
+  expect(long.short!.endsWith("/download")).toBe(true);
+  const chip = b.nodes.find((n) => n.name.startsWith("PaymentsHttpClient"))!;
+  expect(chip.label.length).toBe(27);
+  expect(b.width).toBeGreaterThan(Math.max(...b.pads.filter((p) => p.side === "right").map((p) => p.x)) + 24);
+});
+
+test("endpoint and external kinds fall back to the method and the id", () => {
+  expect(endpointKind({ method: "GET" })).toBe("http");
+  expect(endpointKind({ method: "KAFKA" })).toBe("message");
+  expect(endpointKind({ method: "GRPC" })).toBe("grpc");
+  expect(endpointKind({ method: "CRON" })).toBe("cron");
+  expect(endpointKind({ method: "SOMETHING" })).toBe("http");
+  expect(endpointKind({ method: "KAFKA", kind: "queue" })).toBe("queue");
+  expect(externalKind({ id: "message-out:kafka" })).toBe("message-out");
+  expect(externalKind({ id: "x_pg" })).toBeUndefined();
+  expect(shortMiddle("abcdefghij", 5)).toBe("ab…ij");
+  expect(shortMiddle("abc", 5)).toBe("abc");
+});
+
+test("an unknown node kind lays out like any other", () => {
+  const m: DataMap = {
+    endpoints: [{ id: "e", method: "TCP", path: "user.get", entry: "a" }],
+    nodes: [{ id: "a", name: "A", kind: "guard" }, { id: "b", name: "B", kind: "service" }],
+    edges: [{ from: "a", to: "b", kind: "sync" }],
+    externals: [],
+  };
+  const b = layoutBoard(m);
+  expect(b.nodes.map((n) => n.kind)).toEqual(["guard", "service"]);
+  expect(b.pads[0].kind).toBe("message");
+  expect(findCrossings(b)).toEqual([]);
 });
