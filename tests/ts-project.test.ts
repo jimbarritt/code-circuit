@@ -128,6 +128,40 @@ test("tsconfig paths and baseUrl follow extends chains, with comments and traili
   expect(p.resolveImport("apps/api/src/main.ts", "src/config/app.config")).toBe("apps/api/src/config/app.config.ts");
 });
 
+test("build, out, dist, test and tests are skipped at a module root and kept deeper down", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "tsconfig.json": JSON.stringify({ compilerOptions: { outDir: "lib" } }),
+    "build/x.ts": "export {}",
+    "test/x.ts": "export {}",
+    "lib/x.ts": "export {}",
+    "src/core/build/build.controller.ts": "export {}",
+    "src/core/out/a.ts": "export {}",
+    "src/analytics/tests/index.ts": "export {}",
+  });
+  expect(loadProject(root).files.map((f) => f.rel)).toEqual(["src/analytics/tests/index.ts", "src/core/build/build.controller.ts", "src/core/out/a.ts"]);
+});
+
+test("discovery merges workspaces, Nx projects and manifests outside them, with unique module names", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "@x/core", workspaces: ["packages/*"] }),
+    "packages/core/package.json": JSON.stringify({ name: "@x/core" }),
+    "packages/core/index.ts": "export {}",
+    "packages/core/sub/tsconfig.json": "{}",
+    "packages/core/sub/a.ts": "export {}",
+    "jobs/project.json": JSON.stringify({ name: "jobs" }),
+    "jobs/main.ts": "import '@x/core';",
+    "sample/one/package.json": JSON.stringify({ name: "starter" }),
+    "sample/one/src/app.ts": "export {}",
+    "sample/two/package.json": JSON.stringify({ name: "starter" }),
+    "sample/two/src/app.ts": "export {}",
+  });
+  expect(mods(root)).toEqual(["jobs@jobs:nx", "@x/core@packages/core:workspace", "starter@sample/one:manifest", "starter (sample/two)@sample/two:manifest", "@x/core (root)@.:root"]);
+  const p = loadProject(root);
+  expect(p.file("sample/two/src/app.ts")?.module).toBe("starter (sample/two)");
+  expect(p.resolveImport("jobs/main.ts", "@x/core")).toBe("packages/core/index.ts");
+});
+
 const EXAMPLE = "/home/user/examples/nest-turbo-starter";
 
 test.skipIf(!existsSync(EXAMPLE))("the nest-turbo-starter example has six workspace modules and resolves its imports", () => {

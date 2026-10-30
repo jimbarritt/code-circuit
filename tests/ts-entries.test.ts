@@ -36,7 +36,7 @@ for (const name of ["ts-shop", "ts-plain"]) {
     const expected = JSON.parse(readFileSync(join(root, "EXPECTED.json"), "utf8")).entries as Finding[];
     const found = entries(root);
     expect(found.map(key).sort()).toEqual(expected.map(key).sort());
-    const extra = (fs: Pick<Finding, "symbol" | "resolved">[]) => fs.map((f, i) => `${key(fs[i] as Finding)} | ${f.symbol} | ${f.resolved}`).sort();
+    const extra = (fs: Pick<Finding, "symbol" | "resolved" | "module">[]) => fs.map((f, i) => `${key(fs[i] as Finding)} | ${f.symbol} | ${f.resolved} | ${f.module}`).sort();
     expect(extra(found)).toEqual(extra(expected));
     expect(found.every((f) => f.rule && f.node)).toBe(true);
   });

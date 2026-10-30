@@ -33,7 +33,7 @@ const KEYS = ["direction", "kind", "protocol", "method", "target", "resolved", "
 const keyOf = (f: Record<string, unknown>, extra: string[] = []) => [...KEYS, ...extra].map((k) => String(f[k])).join(" | ");
 
 describe("fixtures", () => {
-  for (const [name, extra] of [["ts-shop", ["module"]], ["ts-plain", []]] as const) {
+  for (const [name, extra] of [["ts-shop", ["module"]], ["ts-plain", ["module"]]] as const) {
     test(`${name}: exits match EXPECTED.json`, () => {
       const root = join(import.meta.dir, "fixtures", name);
       const expected = JSON.parse(readFileSync(join(root, "EXPECTED.json"), "utf8")).exits.map((f: any) => keyOf(f, [...extra])).sort();

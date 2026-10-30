@@ -13,7 +13,7 @@ Read a real TypeScript repo with one or more modules. Write two things:
 
 - Parse with the TypeScript compiler API (`typescript` package, `ts.createSourceFile`). Do not use regular expressions on source text to find code. Do not run the type checker: the repo has no `node_modules` installed in general.
 - Do not rely on pnpm or Turborepo. A repo can use npm, yarn or pnpm workspaces, Nx, Lerna, plain `tsconfig.json` files, or no module system.
-- Skip `node_modules`, `dist`, `build`, `out`, `coverage`, `.next`, hidden directories, `*.d.ts`, `*.spec.ts`, `*.test.ts`, `__tests__`, `test` and `tests` directories.
+- Skip `node_modules`, `coverage`, `__tests__`, hidden directories, `*.d.ts`, `*.spec.ts` and `*.test.ts` everywhere. Skip `dist`, `build`, `out`, `test` and `tests` only at a module root, which is a directory with a `package.json`, `project.json` or `tsconfig.json`. Skip the `outDir` of each `tsconfig.json`. A directory with one of these names deeper in the source tree holds real code.
 - Every finding records the rule that produced it.
 - A value that cannot be resolved to a literal stays in the finding as the source text, with `resolved: false`. Never drop a finding because its target is unknown.
 
@@ -35,14 +35,14 @@ All code lives in `src/extract/ts/`.
 
 `loadProject(root: string): Project`.
 
-Module discovery, in this order. The first source that yields modules wins, and the root is always a fallback module:
+Module discovery merges these sources:
 
 1. `workspaces` in the root `package.json` (array, or `{ packages: [...] }`), `pnpm-workspace.yaml` `packages`, `lerna.json` `packages`. Expand globs such as `apps/*` and `packages/**`.
-2. Nx: every `project.json` outside skipped directories.
-3. Every `package.json` or `tsconfig.json` below the root, outside skipped directories, whose directory holds `.ts` files.
-4. The root itself.
+2. Nx: every `project.json` outside skipped directories, unless a workspace module has the same directory.
+3. Every `package.json` or `tsconfig.json` below the root, outside skipped directories, whose directory holds `.ts` files and is not inside a workspace or Nx module.
+4. The root itself, always, as the fallback module.
 
-A module has a name: the `name` of its `package.json`, else the `name` of its `project.json`, else its directory relative to the root. A file belongs to the module with the deepest directory that contains it.
+A module has a name: the `name` of its `package.json`, else the `name` of its `project.json`, else its directory relative to the root. Module names are unique. When a name is taken, a later module is named `<name> (<dir>)`, and the root is named `<name> (root)`. Import resolution still uses the `package.json` name. A file belongs to the module with the deepest directory that contains it.
 
 Import resolution: `project.resolveImport(fromRel, specifier)` returns a file path relative to the root, or `undefined`. It handles:
 

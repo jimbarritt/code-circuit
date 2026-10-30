@@ -31,5 +31,3 @@ A repo with no workspaces. The root `package.json` has no `workspaces` field. It
 - An unresolved `target` is the exact source text of the expression.
 - An amqplib `publish` target is `<exchange>/<routing key>`.
 - A link has `from_symbol`, `to_symbol`, `via`, `kind` (`async` or `sync`) and `protocol`.
-
-The expected modules assume that discovery finds both the Nx project and the `package.json` module. The rule "the first source that yields modules wins" in the design note finds only `jobs`, and puts `gateway` in the root module.

@@ -36,6 +36,7 @@ describe("fixtures", () => {
       expect(map.endpoints.length).toBe(map.survey.entries.length);
       expect(map.language).toBe("TypeScript");
       expect(map.system).toBe(name);
+      expect(map.survey.modules).toEqual(expected.modules);
     });
   }
 

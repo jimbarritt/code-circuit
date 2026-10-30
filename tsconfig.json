@@ -11,5 +11,5 @@
     "allowImportingTsExtensions": true
   },
   "include": ["src", "tests"],
-  "exclude": ["src/html"]
+  "exclude": ["src/html", "tests/fixtures"]
 }

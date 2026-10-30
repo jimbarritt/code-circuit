@@ -3,24 +3,35 @@ import { join, posix } from "node:path";
 import ts from "typescript";
 import type { Module, Project, SourceFile } from "./types.ts";
 
-const SKIP_DIRS = new Set(["node_modules", "dist", "build", "out", "coverage", "__tests__", "test", "tests"]);
+const SKIP_ALWAYS = new Set(["node_modules", "coverage", "__tests__"]);
+/** Skipped only at a module root, next to package.json, project.json or tsconfig.json. */
+const SKIP_AT_ROOT = new Set(["dist", "build", "out", "test", "tests"]);
+const MANIFESTS = ["package.json", "tsconfig.json", "project.json"];
 const SKIP_FILE = /\.d\.ts$|\.(spec|test)\.tsx?$/;
 
-interface Scan { files: string[]; manifests: Set<string>; tsconfigs: Set<string>; nx: string[] }
+interface Scan { files: string[]; manifests: Set<string>; tsconfigs: Set<string>; nx: string[]; outDirs: Set<string> }
 
-function scan(root: string, dir = ".", out: Scan = { files: [], manifests: new Set(), tsconfigs: new Set(), nx: [] }): Scan {
+function scan(root: string, dir = ".", out: Scan = { files: [], manifests: new Set(), tsconfigs: new Set(), nx: [], outDirs: new Set() }): Scan {
   let entries;
   try { entries = readdirSync(join(root, dir), { withFileTypes: true }); } catch { return out; }
-  for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+  const atRoot = entries.some((e) => e.isFile() && MANIFESTS.includes(e.name));
+  for (const e of entries) {
+    if (!e.isFile()) continue;
     const rel = dir === "." ? e.name : `${dir}/${e.name}`;
-    if (e.isDirectory()) {
-      if (!e.name.startsWith(".") && !SKIP_DIRS.has(e.name)) scan(root, rel, out);
-    } else if (e.isFile()) {
-      if (/\.tsx?$/.test(e.name) && !SKIP_FILE.test(e.name)) out.files.push(rel);
-      else if (e.name === "package.json") out.manifests.add(dir);
-      else if (e.name === "tsconfig.json") out.tsconfigs.add(dir);
-      else if (e.name === "project.json") out.nx.push(dir);
-    }
+    if (/\.tsx?$/.test(e.name) && !SKIP_FILE.test(e.name)) out.files.push(rel);
+    else if (e.name === "package.json") out.manifests.add(dir);
+    else if (e.name === "tsconfig.json") {
+      out.tsconfigs.add(dir);
+      const o = readJson(join(root, rel))?.compilerOptions?.outDir;
+      if (typeof o === "string") out.outDirs.add(posix.normalize(posix.join(dir, o)));
+    } else if (e.name === "project.json") out.nx.push(dir);
+  }
+  for (const e of entries) {
+    if (!e.isDirectory() || e.name.startsWith(".") || SKIP_ALWAYS.has(e.name)) continue;
+    const rel = dir === "." ? e.name : `${dir}/${e.name}`;
+    if ((atRoot && SKIP_AT_ROOT.has(e.name)) || out.outDirs.has(rel)) continue;
+    scan(root, rel, out);
   }
   return out;
 }
@@ -103,18 +114,23 @@ export function loadProject(root: string): Project {
     const nx = s.nx.includes(dir) ? readJson(join(root, dir, "project.json")) : undefined;
     return typeof nx?.name === "string" ? nx.name : dir;
   };
+  const taken = (dir: string) => found.some((m) => m.dir === dir || contains(m.dir, dir));
   if (globs.length) {
     for (const dir of expandGlobs(globs, s.manifests)) found.push({ name: nameOf(dir), dir, source: "workspace" });
   }
-  if (!found.length) for (const dir of s.nx.filter((d) => d !== ".")) found.push({ name: nameOf(dir), dir, source: "nx" });
-  if (!found.length) {
-    const dirs = new Set([...s.manifests, ...s.tsconfigs]);
-    dirs.delete(".");
-    for (const dir of [...dirs].sort()) {
-      if (s.files.some((f) => contains(dir, f))) found.push({ name: nameOf(dir), dir, source: "manifest" });
-    }
+  for (const dir of s.nx.filter((d) => d !== ".")) if (!found.some((m) => m.dir === dir)) found.push({ name: nameOf(dir), dir, source: "nx" });
+  const outside = new Set<string>();
+  for (const dir of [...s.manifests, ...s.tsconfigs]) if (dir !== "." && !taken(dir) && s.files.some((f) => contains(dir, f))) outside.add(dir);
+  for (const dir of [...outside].sort()) found.push({ name: nameOf(dir), dir, source: "manifest" });
+  const rootName = typeof rootPkg?.name === "string" ? rootPkg.name : ".";
+  // Package names, for import resolution; module names below are made unique.
+  const pkgNames = new Map(found.map((m) => [m.dir, m.name]));
+  const names = new Set<string>();
+  for (const m of found) {
+    if (names.has(m.name)) m.name = `${m.name} (${m.dir})`;
+    names.add(m.name);
   }
-  const modules: Module[] = [...found.sort((a, b) => a.dir.localeCompare(b.dir)), { name: typeof rootPkg?.name === "string" ? rootPkg.name : ".", dir: ".", source: "root" }];
+  const modules: Module[] = [...found.sort((a, b) => a.dir.localeCompare(b.dir)), { name: names.has(rootName) ? `${rootName} (root)` : rootName, dir: ".", source: "root" }];
 
   const moduleOf = (rel: string) => {
     let best = modules[modules.length - 1]!;
@@ -198,7 +214,7 @@ export function loadProject(root: string): Project {
     return undefined;
   };
 
-  const packages = modules.filter((m) => m.dir !== ".");
+  const packages = modules.filter((m) => m.dir !== ".").map((m) => ({ dir: m.dir, name: pkgNames.get(m.dir) ?? m.name }));
   const viaPackage = (spec: string) => {
     const m = packages.find((p) => spec === p.name || spec.startsWith(p.name + "/"));
     if (!m) return undefined;
