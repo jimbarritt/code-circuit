@@ -1,0 +1,121 @@
+@app/common
+  exits
+    database (1)
+      flush                   (unit of work)                              MikroOrmMicroserviceInterceptor.intercept      libs/common/src/interceptors/mikro-orm-microservice.interceptor.ts:36
+  @app/common: 0 entries, 1 exit
+
+@app/core
+  exits
+    database (1)
+      getResultAndCount       queryBuilder?                               BaseRepository.paginate                        libs/core/src/base/base.repository.ts:31
+    cache (11)
+      set                     key?                                        RedisService.setValue                          libs/core/src/redis/redis.service.ts:12
+      set                     key?                                        RedisService.setValue                          libs/core/src/redis/redis.service.ts:14
+      get                     key?                                        RedisService.getValue                          libs/core/src/redis/redis.service.ts:19
+      del                     key?                                        RedisService.deleteKey                         libs/core/src/redis/redis.service.ts:37
+      keys                    pattern?                                    RedisService.deleteByPattern                   libs/core/src/redis/redis.service.ts:41
+      del                     ...keys?                                    RedisService.deleteByPattern                   libs/core/src/redis/redis.service.ts:43
+      hget                    hashKey?                                    RedisService.getHashValue                      libs/core/src/redis/redis.service.ts:54
+      hset                    hashKey?                                    RedisService.setHashValue                      libs/core/src/redis/redis.service.ts:78
+      expire                  hashKey?                                    RedisService.setHashValue                      libs/core/src/redis/redis.service.ts:81
+      set                     key?                                        RedisService.acquireLock                       libs/core/src/redis/redis.service.ts:86
+      eval                    luaScript?                                  RedisService.releaseLock                       libs/core/src/redis/redis.service.ts:99
+    http-out (10)
+      GET                     url?                                        HttpService.get                                libs/core/src/http/http.service.ts:19
+      DELETE                  url?                                        HttpService.delete                             libs/core/src/http/http.service.ts:26
+      HEAD                    url?                                        HttpService.head                               libs/core/src/http/http.service.ts:33
+      OPTIONS                 url?                                        HttpService.options                            libs/core/src/http/http.service.ts:40
+      POST                    url?                                        HttpService.post                               libs/core/src/http/http.service.ts:48
+      PUT                     url?                                        HttpService.put                                libs/core/src/http/http.service.ts:56
+      PATCH                   url?                                        HttpService.patch                              libs/core/src/http/http.service.ts:64
+      POST                    url?                                        HttpService.postForm                           libs/core/src/http/http.service.ts:72
+      PUT                     url?                                        HttpService.putForm                            libs/core/src/http/http.service.ts:80
+      PATCH                   url?                                        HttpService.patchForm                          libs/core/src/http/http.service.ts:88
+    grpc-out (2)
+      getUser                 UserService/GetUser                         GrpcGatewayAuthStrategy.lookupAndValidateUser  libs/core/src/auth/strategies/grpc-gateway-auth.strategy.ts:35
+      getUser                 UserService/GetUser                         GrpcJwtAuthStrategy.validate                   libs/core/src/auth/strategies/grpc-jwt-auth.strategy.ts:50
+    cloud (4)
+      PutObject               S3/PutObject                                AwsS3Service.uploadFile                        libs/core/src/aws-s3/aws-s3.service.ts:76
+      verifyIdToken           OAuth2/VerifyIdToken                        GoogleAuthService.verify                       libs/core/src/google-auth/google-auth.service.ts:20
+      getToken                OAuth2/GetToken                             GoogleAuthService.getTokensAndVerify           libs/core/src/google-auth/google-auth.service.ts:39
+      verifyIdToken           OAuth2/VerifyIdToken                        GoogleAuthService.getTokensAndVerify           libs/core/src/google-auth/google-auth.service.ts:42
+  @app/core: 0 entries, 28 exits
+
+@app/email-template
+  @app/email-template: 0 entries, 0 exits
+
+auth-service
+  entries
+    http (9)
+      GET                     /api                                        AppController.getHello                         apps/auth-service/src/modules/app.controller.ts:10
+      POST                    /api/login                                  AuthController.login                           apps/auth-service/src/modules/auth/auth.controller.ts:30
+      POST                    /api/sign-up                                AuthController.signUp                          apps/auth-service/src/modules/auth/auth.controller.ts:46
+      POST                    /api/refresh-token                          AuthController.refreshToken                    apps/auth-service/src/modules/auth/auth.controller.ts:65
+      POST                    /api/logout                                 AuthController.logout                          apps/auth-service/src/modules/auth/auth.controller.ts:83
+      POST                    /api/forgot-password                        AuthController.sendResetPasswordLink           apps/auth-service/src/modules/auth/auth.controller.ts:99
+      POST                    /api/forgot-password/verify                 AuthController.verifyResetPasswordLink         apps/auth-service/src/modules/auth/auth.controller.ts:116
+      POST                    /api/reset-password                         AuthController.resetPassword                   apps/auth-service/src/modules/auth/auth.controller.ts:133
+      POST                    /api/change-password                        AuthController.changePassword                  apps/auth-service/src/modules/auth/auth.controller.ts:148
+  exits
+    grpc-out (10)
+      getUser                 UserService/GetUser                         AuthService.login                              apps/auth-service/src/modules/auth/auth.service.ts:86
+      createUser              UserService/CreateUser                      AuthService.signUp                             apps/auth-service/src/modules/auth/auth.service.ts:105
+      getUser                 UserService/GetUser                         AuthService.sendResetPasswordLink              apps/auth-service/src/modules/auth/auth.service.ts:131
+      sendForgotPasswordMail  NotificationService/SendForgotPasswordMail  AuthService.sendResetPasswordLink              apps/auth-service/src/modules/auth/auth.service.ts:147
+      getUser                 UserService/GetUser                         AuthService.verifyResetPasswordLink            apps/auth-service/src/modules/auth/auth.service.ts:175
+      getUser                 UserService/GetUser                         AuthService.resetPassword                      apps/auth-service/src/modules/auth/auth.service.ts:187
+      updateUser              UserService/UpdateUser                      AuthService.resetPassword                      apps/auth-service/src/modules/auth/auth.service.ts:209
+      getUser                 UserService/GetUser                         AuthService.changePassword                     apps/auth-service/src/modules/auth/auth.service.ts:287
+      updateUser              UserService/UpdateUser                      AuthService.changePassword                     apps/auth-service/src/modules/auth/auth.service.ts:312
+      getUser                 UserService/GetUser                         RefreshTokenStrategy.validate                  apps/auth-service/src/modules/auth/strategies/refresh-token.strategy.ts:47
+  auth-service: 9 entries, 10 exits
+
+nest-turbo-starter
+  nest-turbo-starter: 0 entries, 0 exits
+
+notification-service
+  entries
+    http (1)
+      GET                     /api                                        AppController.getHello                         apps/notification-service/src/modules/app.controller.ts:10
+    grpc (1)
+      GRPC                    NotificationService/SendForgotPasswordMail  SendMailConsumer.sendMail                      apps/notification-service/src/modules/send-mail/send-mail.consumer.ts:16
+  exits
+    message-out (1)
+      sendMail                this.smtpConfig.smtpHost?                   SmtpEmailService.sendEmail                     apps/notification-service/src/modules/email/smtp-email.service.ts:39
+    cloud (1)
+      SendEmail               SES/SendEmail                               SesEmailService.sendEmail                      apps/notification-service/src/modules/email/ses-email.service.ts:62
+  notification-service: 2 entries, 2 exits
+
+user-service
+  entries
+    http (2)
+      GET                     /api                                        AppController.getHello                         apps/user-service/src/modules/app.controller.ts:10
+      GET                     /api/info                                   UserController.getUserInfo                     apps/user-service/src/modules/user/user.controller.ts:13
+    grpc (6)
+      GRPC                    UserService/CreateUser                      UserConsumer.createUser                        apps/user-service/src/modules/user/user.consumer.ts:36
+      GRPC                    UserService/GetUser                         UserConsumer.getUser                           apps/user-service/src/modules/user/user.consumer.ts:41
+      GRPC                    UserService/GetUsers                        UserConsumer.getUsers                          apps/user-service/src/modules/user/user.consumer.ts:46
+      GRPC                    UserService/UpdateUser                      UserConsumer.updateUser                        apps/user-service/src/modules/user/user.consumer.ts:51
+      GRPC                    UserService/DeleteUser                      UserConsumer.deleteUser                        apps/user-service/src/modules/user/user.consumer.ts:56
+      GRPC                    UserService/FindUserByEmail                 UserConsumer.findUserByEmail                   apps/user-service/src/modules/user/user.consumer.ts:61
+  exits
+    database (16)
+      findOne                 User                                        CreateAdminCommand.run                         apps/user-service/src/commands/create-admin.command.ts:32
+      flush                   (unit of work)                              CreateAdminCommand.run                         apps/user-service/src/commands/create-admin.command.ts:50
+      persist                 User                                        CreateAdminCommand.run                         apps/user-service/src/commands/create-admin.command.ts:50
+      findOne                 User                                        GatewayAuthStrategy.lookupAndValidateUser      apps/user-service/src/modules/auth/strategies/gateway-auth.strategy.ts:23
+      findOne                 User                                        JwtAuthStrategy.validate                       apps/user-service/src/modules/auth/strategies/jwt-auth.strategy.ts:35
+      findOne                 User                                        UserService.createUser                         apps/user-service/src/modules/user/user.service.ts:37
+      flush                   (unit of work)                              UserService.createUser                         apps/user-service/src/modules/user/user.service.ts:51
+      persist                 User                                        UserService.createUser                         apps/user-service/src/modules/user/user.service.ts:51
+      findOne                 User                                        UserService.getUser                            apps/user-service/src/modules/user/user.service.ts:57
+      findAndCount            User                                        UserService.getUsers                           apps/user-service/src/modules/user/user.service.ts:80
+      findOne                 User                                        UserService.updateUser                         apps/user-service/src/modules/user/user.service.ts:93
+      flush                   (unit of work)                              UserService.updateUser                         apps/user-service/src/modules/user/user.service.ts:112
+      findOne                 User                                        UserService.deleteUser                         apps/user-service/src/modules/user/user.service.ts:121
+      flush                   (unit of work)                              UserService.deleteUser                         apps/user-service/src/modules/user/user.service.ts:128
+      findOne                 User                                        UserService.findUserByEmail                    apps/user-service/src/modules/user/user.service.ts:140
+      findOne                 User                                        UserService.getUserInfo                        apps/user-service/src/modules/user/user.service.ts:178
+  user-service: 8 entries, 16 exits
+
+total: 19 entries, 57 exits in 7 modules

@@ -6,7 +6,7 @@ Endpoints sit on the edge of the board as pads. Modules, classes and functions a
 
 The purpose is navigation. In a large repository or a monorepo with many endpoints, the board shows which chips many endpoints share and which sit inside a single path. A chip reached by one endpoint is a candidate seam.
 
-**Status: first version.** `ccircuit extract` reads a Rails app and `ccircuit render` draws the data map. A hand-drawn board of six Mastodon endpoints stays in [src/html/sketch/](src/html/sketch/) and is unchanged. The mission report is [docs/report.md](docs/report.md). The layout rules are in [docs/layout-rules.md](docs/layout-rules.md).
+**Status: 0.2.0.** `ccircuit extract` reads a TypeScript repo or a Rails app and `ccircuit render` draws the data map. `ccircuit survey` lists every entry point and exit point of a repo. A hand-drawn board of six Mastodon endpoints stays in [src/html/sketch/](src/html/sketch/) and is unchanged. The mission report is [docs/report.md](docs/report.md). The layout rules are in [docs/layout-rules.md](docs/layout-rules.md). The TypeScript extractor is described in [docs/typescript-extractor.md](docs/typescript-extractor.md), and its detector rules are listed in [docs/typescript-rules.md](docs/typescript-rules.md).
 
 ## How it works
 
@@ -84,6 +84,67 @@ On the board:
 - Click a chip to list the endpoints whose paths reach it. The inspector shows the rule that made each edge.
 - Tab to a pad or chip and press Enter or Space to do the same.
 
+## TypeScript
+
+`ccircuit` reads TypeScript repos with the TypeScript compiler API. It parses each file but does not run the type checker, so the repo needs no `node_modules`.
+
+It finds these entry points: NestJS HTTP, gRPC, GraphQL, WebSocket and microservice handlers; Express, Fastify, Koa and Hono routes, with their mount prefixes; kafkajs, amqplib, NATS and Redis subscribers; SQS pollers; BullMQ and Bull workers; Nest schedules, node-cron, `cron` and `setInterval`.
+
+It finds these exit points: TypeORM, MikroORM, Prisma, Mongoose, Sequelize, Knex, Drizzle, Kysely, `pg` and `mysql2`; ioredis, node-redis, cache-manager and Keyv; axios, got, fetch, undici, Nest `HttpService` and Octokit; gRPC stubs; Nest client proxies, kafkajs, amqplib, NATS and Redis producers, and nodemailer; BullMQ and Bull queues; the AWS SDK v2 and v3, and Google OAuth2.
+
+A call is an exit only when the client comes from one of these packages, by import, type or assignment. A producer whose topic matches a consumer in the repo links to it with a queue hop. A gRPC call whose service and method match a handler in the repo links to it directly.
+
+### Modules
+
+A repo can have one module or many. `ccircuit` does not need pnpm or Turborepo. It merges these sources:
+
+1. `workspaces` in `package.json` (npm and yarn), `pnpm-workspace.yaml`, and `lerna.json`;
+2. Nx `project.json` files;
+3. any other directory with a `package.json` or `tsconfig.json` and `.ts` files;
+4. the root, for files no other module holds.
+
+Imports resolve through relative paths, `tsconfig.json` `paths` and `baseUrl` (with `extends`), and workspace package names. Build output, `node_modules`, tests and `*.d.ts` files are skipped.
+
+### Survey
+
+`ccircuit survey` prints every entry point and exit point, grouped by module, direction and kind, with the file and line. A `?` marks a target that is not a literal in the source.
+
+```bash
+ccircuit survey ~/src/nest-turbo-starter
+ccircuit survey ~/src/nest-turbo-starter --json
+ccircuit survey ~/src/nest-turbo-starter --include "GRPC UserService/GetUser"
+```
+
+`ccircuit extract` and `ccircuit survey` find the language of the directory. Use `--lang ts` or `--lang rails` to set it. With `--include`, `survey` keeps the matching entries and the exits of the code they reach.
+
+Part of the survey of [nest-turbo-starter](https://github.com/typv/nest-turbo-starter), a Turborepo with three NestJS services that call each other over gRPC:
+
+```
+notification-service
+  entries
+    http (1)
+      GET                     /api                                        AppController.getHello                         apps/notification-service/src/modules/app.controller.ts:10
+    grpc (1)
+      GRPC                    NotificationService/SendForgotPasswordMail  SendMailConsumer.sendMail                      apps/notification-service/src/modules/send-mail/send-mail.consumer.ts:16
+  exits
+    message-out (1)
+      sendMail                this.smtpConfig.smtpHost?                   SmtpEmailService.sendEmail                     apps/notification-service/src/modules/email/smtp-email.service.ts:39
+    cloud (1)
+      SendEmail               SES/SendEmail                               SesEmailService.sendEmail                      apps/notification-service/src/modules/email/ses-email.service.ts:62
+  notification-service: 2 entries, 2 exits
+
+total: 19 entries, 57 exits in 7 modules
+```
+
+The full survey is [docs/e2e/nest-turbo-starter-survey.txt](docs/e2e/nest-turbo-starter-survey.txt). The data map is [docs/e2e/nest-turbo-starter-data-map.json](docs/e2e/nest-turbo-starter-data-map.json), and the board for it is [docs/e2e/nest-turbo-starter-board.png](docs/e2e/nest-turbo-starter-board.png).
+
+```bash
+ccircuit extract ~/src/nest-turbo-starter > nest.json
+ccircuit render nest.json
+```
+
+## Store
+
 The other two commands move a data map in and out of SQLite.
 
 ```bash
@@ -96,19 +157,18 @@ ccircuit export store.db > copy.json
 ```bash
 bun test
 CC_MASTODON=~/src/mastodon bun test    # also runs the extractor on a Mastodon checkout
+CC_NEST=~/src/nest-turbo-starter bun test    # also runs the extractor on a nest-turbo-starter checkout
 ```
 
 ## Stack
 
-TypeScript on [Bun](https://bun.sh). SQLite through `bun:sqlite`. The Ruby extractor reads source with line-based rules, not a parser. SVG in the browser for the board, with no library.
+TypeScript on [Bun](https://bun.sh). SQLite through `bun:sqlite`. The Ruby extractor reads source with line-based rules, not a parser. The TypeScript extractor parses source with the `typescript` 5.9 compiler API. SVG in the browser for the board, with no library.
 
 ## Test system
 
-[Mastodon](https://github.com/mastodon/mastodon) is the first target. It has REST endpoints, Postgres, Redis, Sidekiq queues, and inbound and outbound ActivityPub traffic.
+[Mastodon](https://github.com/mastodon/mastodon) is the Rails target. It has REST endpoints, Postgres, Redis, Sidekiq queues, and inbound and outbound ActivityPub traffic.
 
-## Licence
-
-To be decided.
+[nest-turbo-starter](https://github.com/typv/nest-turbo-starter) is the TypeScript target. It is a Turborepo with pnpm, NestJS, gRPC, MikroORM, ioredis, axios and AWS SES.
 
 ## Licence
 

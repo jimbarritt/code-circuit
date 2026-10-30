@@ -1,6 +1,6 @@
-# TypeScript extractor: design
+# TypeScript extractor
 
-This document defines the contracts of the TypeScript extractor. Mission `M-CCT-TSEXTRACT` builds it. `ccircuit extract` and `ccircuit survey` use it on a TypeScript repo.
+This document describes the TypeScript extractor and its contracts. Mission `M-CCT-TSEXTRACT` built it. `ccircuit extract` and `ccircuit survey` use it on a TypeScript repo. Each detector rule is listed in [typescript-rules.md](typescript-rules.md).
 
 ## Goal
 
@@ -37,7 +37,7 @@ All code lives in `src/extract/ts/`.
 
 Module discovery merges these sources:
 
-1. `workspaces` in the root `package.json` (array, or `{ packages: [...] }`), `pnpm-workspace.yaml` `packages`, `lerna.json` `packages`. Expand globs such as `apps/*` and `packages/**`.
+1. `workspaces` in the root `package.json` (array, or `{ packages: [...] }`), `pnpm-workspace.yaml` (or `.yml`) `packages`, `lerna.json` `packages`. A glob that starts with `!` excludes directories. Expand globs such as `apps/*` and `packages/**`.
 2. Nx: every `project.json` outside skipped directories, unless a workspace module has the same directory.
 3. Every `package.json` or `tsconfig.json` below the root, outside skipped directories, whose directory holds `.ts` files and is not inside a workspace or Nx module.
 4. The root itself, always, as the fallback module.
@@ -50,6 +50,8 @@ Import resolution: `project.resolveImport(fromRel, specifier)` returns a file pa
 - `compilerOptions.paths` and `baseUrl` from the nearest `tsconfig.json`, following `extends` chains to files inside the repo;
 - workspace package names, to the package's `main`, `types` or `src/index.ts`;
 - a bare specifier that matches a module directory such as `src/config/app.config` under `baseUrl`.
+
+A workspace package name resolves to its `main`, `types`, `typings` or `module` field. When that field points into `dist`, `build`, `lib` or `out`, the same path under `src` is tried, because the build output is not in the repo. A subpath such as `@app/core/redis` resolves under the package's `src` directory first.
 
 ## Symbol index (T-03)
 
@@ -64,6 +66,20 @@ Import resolution: `project.resolveImport(fromRel, specifier)` returns a file pa
 - Nest custom providers `{ provide: X, useClass: Y }` and `{ provide: X, useExisting: Y }` are bindings from X (a class, or a folded token) to Y. A dependency on X with one binding resolves to Y.
 - Decorators are matched by the name they are exported under and the package they come from. The index follows aliased imports (`Get as G`), namespace imports (`common.Get`) and local re-exports to find them.
 - `resolveValue(expr, fileRel)` folds an expression to a string when it can: string literals, no-substitution templates, templates whose parts fold, `+` of folded parts, `const` identifiers in the same file or imported from another file, `export default` values, enum members (also those that name earlier members), and property access on a `const` object literal (`TOPICS.USER_CREATED`), including `as const` and computed string keys.
+
+## Detectors
+
+`ENTRY_DETECTORS` and `EXIT_DETECTORS` run over the whole project. Each one returns findings. [typescript-rules.md](typescript-rules.md) lists every rule they use.
+
+Entry detectors match decorators by name and package, and calls by the package the callee is imported from. A Nest app's bootstrap code is any file that uses `NestFactory`, or that types a value as `INestApplication`, `NestExpressApplication` or `NestFastifyApplication`. From it the extractor reads, per module:
+
+- `setGlobalPrefix(...)`, which prefixes every Nest HTTP path of the module;
+- `enableVersioning(...)` with URI versioning, which adds `v<n>` (or the given `prefix`) from `@Version`, the controller `version` option or `defaultVersion`. `VERSION_NEUTRAL` adds nothing;
+- the `transport` of each microservice, which gives Nest message handlers their protocol. With one transport other than gRPC, the handler takes its method and protocol, for example `KAFKA` and `kafka`. With none or more than one, the method is `MESSAGE` and the protocol is `nest`.
+
+Exit detectors work by import provenance. `exits/clients.ts` follows each value back to where it comes from: an import from a known package, a `new` or a factory call on one, a constructor parameter type, an inject decorator, a `this.<name>` property, a local variable, or a property of another client (`prisma.user`, `em.getRepository(User)`, `kafka.producer()`). A call on a value that comes from a known client package is an exit. A known client package stays a package even when the repo holds its source, as the Nest repo itself does. Names that the code does not import from a client package never make an exit, so a method called `find` or `send` on a repo class is not a database or message call.
+
+`@Inject(TOKEN)` on a Nest `ClientProxy` or `ClientGrpc` finds its transport from an object literal in the repo with the same `name` and a `transport`, as `ClientsModule.register` takes. `@Inject(...)` of a factory call that holds a `Transport.X` argument gives a client of that transport.
 
 ## Findings
 
@@ -108,8 +124,28 @@ Node ids: `<module>:<ClassName>` for a class, `<module>:<file>#<functionName>` f
 - Producers behind a wrapper: when an unresolved `message-out` or `queue-out` target names a parameter of its method, as in `emitMessage(topic, msg)`, each call of that method whose argument folds links the caller to the matching consumers. The rule is the exit rule with `-via-wrapper`.
 - A `grpc-out` finding whose `Service/Method` matches a `grpc` entry in the repo links the client node to the handler node with a `sync` edge, rule `grpc-call`.
 - `io` edges: every other exit finding links its node to an external. One external per kind and protocol, for example `database:mikro-orm` named `Database (MikroORM)`, `message-out:kafka` named `Kafka`, `cloud:aws-ses` named `AWS SES`.
+- `grpc-out` and `grpc` targets compare without the proto package and without case: `user.UserService/GetUser` matches `UserService/getUser`.
+- An exit that links to a consumer in the repo, by `async` or `grpc-call`, makes no `io` edge.
+- The rule of a direct `async` edge is the exit kind, `message-out` or `queue-out`.
+- Edges are unique by `from`, `to`, `kind` and `queue`. The first rule wins.
+- Node kinds come from the class name first (`...Controller`, `...Resolver`, `...Gateway`, `...Consumer`, `...Listener`, `...Handler`, `...Processor`, `...Worker`, `...Repository`, `...Client`, `...Producer`, `...Mailer` and others), then from the class decorators, then from what the class extends, then from the kind of entry it owns. A class with none of these is a `service`.
+- The data map has `system` (the root `package.json` name, else the directory name), `language` (`TypeScript`) and `framework` (`NestJS`, `Express`, `Fastify`, `Koa` or `Hono`, joined with commas when there are more than one).
 - A `survey` section: `{ modules, entries, exits }`, where `entries` and `exits` are the findings sorted by module, file and line.
+
+With `--include`, `extract` keeps the endpoints that match, every node reachable from them along edges, and the externals those nodes reach. Parameter names do not matter in a match, as for Rails.
 
 ## Survey output (T-07)
 
-`ccircuit survey <dir> [--json] [--lang ts|rails] [--include "METHOD target"]...` prints the survey. With `--include`, it keeps the matching entries and the exits of the nodes they reach. Text output groups by module, then by direction, then by kind. Each line holds method, target, symbol and `file:line`. Unresolved targets show with a `?` mark.
+`ccircuit survey` and `ccircuit extract` find the language of the directory. A directory with `config/routes.rb` and a `Gemfile` is Rails. A directory with `package.json`, `tsconfig.json` or a `.ts` file within six levels is TypeScript. `--lang ts` or `--lang rails` sets the language. On a Rails app, `survey` lists the routes as entries and the `io` edges as exits.
+
+`ccircuit survey <dir> [--json] [--lang ts|rails] [--include "METHOD target"]...` prints the survey. With `--include`, it keeps the matching entries and the exits of the nodes they reach. Text output groups by module, then by direction, then by kind. Each line holds method, target, symbol and `file:line`. Unresolved targets show with a `?` mark. Each module ends with its counts, and the last line gives the totals. `--json` prints the survey section of the data map.
+
+[e2e/nest-turbo-starter-survey.txt](e2e/nest-turbo-starter-survey.txt) is the survey of the example repo. [e2e/nest-turbo-starter-data-map.json](e2e/nest-turbo-starter-data-map.json) is its data map, and [e2e/nest-turbo-starter-board.png](e2e/nest-turbo-starter-board.png) is the board. They were made from commit `93b761fee763dbed5e044af51d6a5d4f7847c775` of the example.
+
+## Known limits
+
+- There is no type checker. A value whose client cannot be found from imports, types written in the code, or assignments makes no exit.
+- A target that does not fold stays as source text with `resolved: false`. Such targets make no `async` or `grpc-call` link.
+- Wrapper classes such as an `HttpService` that wraps axios show their exits in the wrapper, with the URL parameter as an unresolved target. Callers link to the wrapper with `di-call` edges.
+- Calls through a dependency are seen only as `this.<dep>.<method>(...)`. A dependency copied to a local first is not followed.
+- Code that registers handlers at run time from a list, or that builds routes in a loop, makes findings only where the values fold.
