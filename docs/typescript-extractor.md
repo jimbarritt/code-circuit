@@ -149,3 +149,11 @@ With `--include`, `extract` keeps the endpoints that match, every node reachable
 - Wrapper classes such as an `HttpService` that wraps axios show their exits in the wrapper, with the URL parameter as an unresolved target. Callers link to the wrapper with `di-call` edges.
 - Calls through a dependency are seen only as `this.<dep>.<method>(...)`. A dependency copied to a local first is not followed.
 - Code that registers handlers at run time from a list, or that builds routes in a loop, makes findings only where the values fold.
+- In a chained call such as `this.repo.qb.where().getOne()`, the index records only the first call.
+- Class expressions (`export const H = class {}`) and anonymous `export default class {}` are not indexed. Their findings fall back to the file owner.
+- GraphQL resolvers built by a class factory make no findings, because the factory is not evaluated.
+- Redis and NATS `subscribe` calls whose channel does not fold are dropped, because `subscribe` is also an RxJS method. This is the one exception to the rule that a finding is never dropped.
+- An entry with protocol `nest`, in a module that listens on several transports, matches a producer on any transport.
+- Octokit calls are found only on a client created with `new Octokit` or typed `Octokit`. A client returned from a helper method is missed.
+- nodemailer `sendMail` is a `message-out` exit. There is no `cli` entry kind, so nest-commander, commander and yargs commands are not found.
+- `ping` on a Redis client is not an exit, because it checks the connection and moves no data.

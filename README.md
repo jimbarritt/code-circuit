@@ -34,6 +34,8 @@ A data map holds four lists.
 
 Every edge records which extraction rule produced it.
 
+The TypeScript extractor adds fields. An endpoint carries `kind` (`http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`), `protocol`, `module`, `file` and `line`. A node carries `module`. The data map also holds a `survey` section with every finding. [docs/typescript-extractor.md](docs/typescript-extractor.md) defines them.
+
 ## Install
 
 With [Homebrew](https://brew.sh) on macOS or Linux:
@@ -41,6 +43,8 @@ With [Homebrew](https://brew.sh) on macOS or Linux:
 ```bash
 brew install jimbarritt/tap/ccircuit
 ```
+
+The formula exists only after a release run writes it to `jimbarritt/homebrew-tap`. That needs the secret `HOMEBREW_TAP_TOKEN` (see Release). Until then, download a binary from the [releases](https://github.com/jimbarritt/code-circuit/releases) page or build from source.
 
 To build from source:
 
@@ -142,6 +146,19 @@ The full survey is [docs/e2e/nest-turbo-starter-survey.txt](docs/e2e/nest-turbo-
 ccircuit extract ~/src/nest-turbo-starter > nest.json
 ccircuit render nest.json
 ```
+
+### Known limits
+
+- There is no type checker. A call is an exit only when its client can be traced from imports, written types or assignments.
+- A target that is not a literal in the source, such as a URL or a cache key passed in as a method parameter, shows with a `?`. It makes no queue hop or gRPC link.
+- A wrapper class around a client, such as an `HttpService` around axios, shows the exit in the wrapper. Callers link to the wrapper.
+- Calls through a dependency are seen only as `this.<dep>.<method>(...)`. A dependency copied to a local variable first is not followed. In a chain such as `this.repo.qb.where().getOne()`, only the first call is recorded.
+- Class expressions (`const H = class {}`) and anonymous default classes are not indexed. Their findings belong to the file.
+- GraphQL resolvers built by a class factory make no findings.
+- Redis and NATS `subscribe` calls whose channel is not a literal are dropped, because RxJS uses the same method name.
+- In a module that listens on several transports, a message consumer can link to a producer on another transport.
+- nodemailer `sendMail` shows as a `message-out` exit. Command line entry points (nest-commander, commander, yargs) are not found.
+- Handlers registered at run time from a list, or routes built in a loop, make findings only where the values are literals.
 
 ## Store
 
