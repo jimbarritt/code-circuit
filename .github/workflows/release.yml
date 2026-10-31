@@ -193,6 +193,8 @@ jobs:
 
   formula:
     needs: [version, build]
+    # always() keeps the job when release is skipped, as on a manual run.
+    if: always() && needs.build.result == 'success'
     runs-on: ubuntu-latest
     environment: release
     env:
