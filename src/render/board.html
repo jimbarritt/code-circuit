@@ -43,6 +43,7 @@
     --ext-queue-out: #5fb4c9;
     --ext-http-out: #f2a07b;
     --ext-grpc-out: #7fdbca;
+    --ext-smtp-out: #c3e88d;
     --ext-cloud: #ffd27f;
     --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
     --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -175,7 +176,7 @@
 
   const KINDS = ['controller', 'resolver', 'gateway', 'consumer', 'service', 'model', 'repository', 'worker', 'client', 'function', 'adapter'];
   const EP_KINDS = ['http', 'grpc', 'graphql', 'message', 'queue', 'cron', 'websocket'];
-  const EXT_KINDS = ['database', 'cache', 'message-out', 'queue-out', 'http-out', 'grpc-out', 'cloud'];
+  const EXT_KINDS = ['database', 'cache', 'message-out', 'queue-out', 'http-out', 'grpc-out', 'smtp-out', 'cloud'];
   const known = (k) => KINDS.includes(k);
   const kindColor = (k) => (known(k) ? 'var(--kind-' + k + ')' : 'var(--muted)');
   const epColor = (k) => (EP_KINDS.includes(k) ? 'var(--ep-' + k + ')' : 'var(--copper)');

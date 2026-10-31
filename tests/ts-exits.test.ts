@@ -92,7 +92,7 @@ describe.skipIf(!existsSync(NEST_STARTER))("nest-turbo-starter", () => {
   });
 
   test("SMTP through nodemailer", () => {
-    expect(has({ kind: "message-out", protocol: "smtp", method: "sendMail", symbol: "SmtpEmailService.sendEmail" })).toBe(true);
+    expect(has({ kind: "smtp-out", protocol: "smtp", method: "sendMail", symbol: "SmtpEmailService.sendEmail" })).toBe(true);
   });
 });
 

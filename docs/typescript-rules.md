@@ -85,7 +85,7 @@ Some limits hold for every rule:
 | `amqplib-publish` | `message-out` | `amqplib` | `channel.sendToQueue(queue, ...)`, `channel.publish(exchange, key, ...)` | queue, or `exchange/key` | |
 | `nats-publish` | `message-out` | `nats` | `nc.publish(subject)` or `nc.request(subject)` on `connect()` from `nats` | subject | |
 | `redis-publish` | `message-out` | `redis` | `redis.publish(channel, ...)` | channel | |
-| `nodemailer-send` | `message-out` | `smtp` | `transporter.sendMail(...)` on `createTransport(...)` from `nodemailer` | the transport host when it folds | The target is the host argument of `createTransport` as written, often a config property. |
+| `nodemailer-send` | `smtp-out` | `smtp` | `transporter.sendMail(...)` on `createTransport(...)` from `nodemailer` | the transport host when it folds | The target is the host argument of `createTransport` as written, often a config property. |
 | `bullmq-queue-add` | `queue-out` | `bullmq` | `queue.add(...)`, `addBulk` on `new Queue(name)` or `@InjectQueue(name)` | queue name | |
 | `bull-queue-add` | `queue-out` | `bull` | as above, from `bull` or `@nestjs/bull` | queue name | |
 | `aws-sdk-v3-command` | `cloud`, or `queue-out`, `message-out` | `aws-<service>` | `client.send(new XCommand(params))` from `@aws-sdk/client-<service>` or `@aws-sdk/lib-dynamodb` | `<Service>/<Op>`; queue URL for SQS `SendMessage`; topic ARN for SNS `Publish`; stream for Kinesis `PutRecord` | SQS `ReceiveMessage` is an entry, not an exit. A command that cannot be found keeps its text, unresolved. |

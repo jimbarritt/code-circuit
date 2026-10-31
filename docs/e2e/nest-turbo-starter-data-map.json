@@ -534,7 +534,7 @@
     },
     {
       "from": "notification-service:SmtpEmailService",
-      "to": "message-out:smtp",
+      "to": "smtp-out:smtp",
       "kind": "io",
       "rule": "nodemailer-send"
     },
@@ -637,9 +637,9 @@
       "protocol": "axios"
     },
     {
-      "id": "message-out:smtp",
+      "id": "smtp-out:smtp",
       "name": "SMTP",
-      "kind": "message-out",
+      "kind": "smtp-out",
       "protocol": "smtp"
     }
   ],
@@ -1484,7 +1484,7 @@
       },
       {
         "direction": "exit",
-        "kind": "message-out",
+        "kind": "smtp-out",
         "protocol": "smtp",
         "method": "sendMail",
         "target": "this.smtpConfig.smtpHost",

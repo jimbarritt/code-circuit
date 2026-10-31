@@ -33,7 +33,7 @@ test.skipIf(!NEST)("nest-turbo-starter: gRPC links, /api endpoints, MikroORM, Re
   for (const [from, to] of [["notification-service:SendMailConsumer", "notification-service:EmailService"], ["notification-service:EmailService", "notification-service:SmtpEmailService"]]) {
     expect(map.edges).toContainEqual({ from, to, kind: "sync", rule: "di-call" });
   }
-  expect(map.edges).toContainEqual({ from: "notification-service:SmtpEmailService", to: "message-out:smtp", kind: "io", rule: "nodemailer-send" });
+  expect(map.edges).toContainEqual({ from: "notification-service:SmtpEmailService", to: "smtp-out:smtp", kind: "io", rule: "nodemailer-send" });
   // A call made in an inherited method counts for the subclass.
   expect(map.edges).toContainEqual({ from: "@app/core:GrpcGatewayAuthStrategy", to: "@app/core:RedisService", kind: "sync", rule: "di-call" });
   expect(map.survey.exits.filter((f) => f.method === "flush").every((f) => f.target === "(unit of work)")).toBe(true);

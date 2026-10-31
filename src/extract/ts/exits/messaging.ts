@@ -27,8 +27,6 @@ export const messagingDetector: Detector = siteDetector("message-out", (s, r) =>
       return m === "publish" || m === "request" ? out("nats", m, r.val(args[0]), "nats-publish") : undefined;
     case "ioredis": case "redis":
       return m === "publish" ? out("redis", m, r.val(args[0]), "redis-publish") : undefined;
-    case "nodemailer":
-      return m === "sendMail" ? out("smtp", m, c.name !== undefined ? { target: c.name, resolved: !!c.resolved } : { target: "smtp", resolved: false }, "nodemailer-send") : undefined;
   }
   return undefined;
 });

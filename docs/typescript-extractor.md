@@ -88,7 +88,7 @@ Detectors return `Finding` objects. `types.ts` holds the exact type. The fields:
 | Field | Meaning |
 |---|---|
 | `direction` | `entry` or `exit` |
-| `kind` | entry: `http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`. exit: `database`, `cache`, `http-out`, `grpc-out`, `message-out`, `queue-out`, `cloud` |
+| `kind` | entry: `http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`. exit: `database`, `cache`, `http-out`, `grpc-out`, `message-out`, `queue-out`, `smtp-out`, `cloud` |
 | `protocol` | the library or transport, for example `nest`, `express`, `kafka`, `rmq`, `nats`, `bullmq`, `typeorm`, `prisma`, `kysely`, `axios`, `octokit`, `aws-ses` |
 | `method` | entry: HTTP verb, or `GRPC`, `GRAPHQL`, `KAFKA`, `RMQ`, `NATS`, `MQTT`, `REDIS`, `TCP`, `MESSAGE`, `QUEUE`, `CRON`, `WS`. exit: the operation, such as `find`, `persist`, `send`, `emit`, `get`, `POST` |
 | `target` | entry: HTTP path with prefixes, `Service/Method`, topic or pattern, queue name, schedule. exit: entity or table, topic, queue, URL or host, `Service/Method`, cloud service and operation |
@@ -155,5 +155,5 @@ With `--include`, `extract` keeps the endpoints that match, every node reachable
 - Redis and NATS `subscribe` calls whose channel does not fold are dropped, because `subscribe` is also an RxJS method. This is the one exception to the rule that a finding is never dropped.
 - An entry with protocol `nest`, in a module that listens on several transports, matches a producer on any transport.
 - Octokit calls are found only on a client created with `new Octokit` or typed `Octokit`. A client returned from a helper method is missed.
-- nodemailer `sendMail` is a `message-out` exit. There is no `cli` entry kind, so nest-commander, commander and yargs commands are not found.
+- There is no `cli` entry kind, so nest-commander, commander and yargs commands are not found.
 - `ping` on a Redis client is not an exit, because it checks the connection and moves no data.

@@ -80,7 +80,7 @@ notification-service
     grpc (1)
       GRPC                    NotificationService/SendForgotPasswordMail  SendMailConsumer.sendMail                      apps/notification-service/src/modules/send-mail/send-mail.consumer.ts:16
   exits
-    message-out (1)
+    smtp-out (1)
       sendMail                this.smtpConfig.smtpHost?                   SmtpEmailService.sendEmail                     apps/notification-service/src/modules/email/smtp-email.service.ts:39
     cloud (1)
       SendEmail               SES/SendEmail                               SesEmailService.sendEmail                      apps/notification-service/src/modules/email/ses-email.service.ts:62

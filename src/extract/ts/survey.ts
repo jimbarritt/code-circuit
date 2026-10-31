@@ -3,7 +3,7 @@ import type { Survey } from "./assemble.ts";
 import type { Finding } from "./types.ts";
 
 const ENTRY_ORDER = ["http", "grpc", "graphql", "websocket", "message", "queue", "cron"];
-const EXIT_ORDER = ["database", "cache", "http-out", "grpc-out", "message-out", "queue-out", "cloud"];
+const EXIT_ORDER = ["database", "cache", "http-out", "grpc-out", "message-out", "queue-out", "smtp-out", "cloud"];
 const MAX_PAD = 48;
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;

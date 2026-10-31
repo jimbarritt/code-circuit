@@ -94,7 +94,7 @@ On the board:
 
 It finds these entry points: NestJS HTTP, gRPC, GraphQL, WebSocket and microservice handlers; Express, Fastify, Koa and Hono routes, with their mount prefixes; kafkajs, amqplib, NATS and Redis subscribers; SQS pollers; BullMQ and Bull workers; Nest schedules, node-cron, `cron` and `setInterval`.
 
-It finds these exit points: TypeORM, MikroORM, Prisma, Mongoose, Sequelize, Knex, Drizzle, Kysely, `pg` and `mysql2`; ioredis, node-redis, cache-manager and Keyv; axios, got, fetch, undici, Nest `HttpService` and Octokit; gRPC stubs; Nest client proxies, kafkajs, amqplib, NATS and Redis producers, and nodemailer; BullMQ and Bull queues; the AWS SDK v2 and v3, and Google OAuth2.
+It finds these exit points: TypeORM, MikroORM, Prisma, Mongoose, Sequelize, Knex, Drizzle, Kysely, `pg` and `mysql2`; ioredis, node-redis, cache-manager and Keyv; axios, got, fetch, undici, Nest `HttpService` and Octokit; gRPC stubs; Nest client proxies, kafkajs, amqplib, NATS and Redis producers; BullMQ and Bull queues; nodemailer, as `smtp-out`; the AWS SDK v2 and v3, and Google OAuth2.
 
 A call is an exit only when the client comes from one of these packages, by import, type or assignment. A producer whose topic matches a consumer in the repo links to it with a queue hop. A gRPC call whose service and method match a handler in the repo links to it directly.
 
@@ -131,7 +131,7 @@ notification-service
     grpc (1)
       GRPC                    NotificationService/SendForgotPasswordMail  SendMailConsumer.sendMail                      apps/notification-service/src/modules/send-mail/send-mail.consumer.ts:16
   exits
-    message-out (1)
+    smtp-out (1)
       sendMail                this.smtpConfig.smtpHost?                   SmtpEmailService.sendEmail                     apps/notification-service/src/modules/email/smtp-email.service.ts:39
     cloud (1)
       SendEmail               SES/SendEmail                               SesEmailService.sendEmail                      apps/notification-service/src/modules/email/ses-email.service.ts:62
@@ -157,7 +157,7 @@ ccircuit render nest.json
 - GraphQL resolvers built by a class factory make no findings.
 - Redis and NATS `subscribe` calls whose channel is not a literal are dropped, because RxJS uses the same method name.
 - In a module that listens on several transports, a message consumer can link to a producer on another transport.
-- nodemailer `sendMail` shows as a `message-out` exit. Command line entry points (nest-commander, commander, yargs) are not found.
+- Command line entry points (nest-commander, commander, yargs) are not found.
 - Handlers registered at run time from a list, or routes built in a loop, make findings only where the values are literals.
 
 ## Store
