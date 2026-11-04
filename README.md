@@ -6,7 +6,7 @@ Endpoints sit on the edge of the board as pads. Modules, classes and functions a
 
 The purpose is navigation. In a large repository or a monorepo with many endpoints, the board shows which chips many endpoints share and which sit inside a single path. A chip reached by one endpoint is a candidate seam.
 
-**Status: 0.2.0.** `ccircuit extract` reads a TypeScript repo or a Rails app and `ccircuit render` draws the data map. `ccircuit survey` lists every entry point and exit point of a repo. A hand-drawn board of six Mastodon endpoints stays in [src/html/sketch/](src/html/sketch/) and is unchanged. The mission report is [docs/report.md](docs/report.md). The layout rules are in [docs/layout-rules.md](docs/layout-rules.md). The TypeScript extractor is described in [docs/typescript-extractor.md](docs/typescript-extractor.md), and its detector rules are listed in [docs/typescript-rules.md](docs/typescript-rules.md).
+**Status: 0.3.0.** `ccircuit extract` reads a TypeScript repo or a Rails app and `ccircuit render` draws the data map. `ccircuit survey` lists every entry point and exit point of a repo. A hand-drawn board of six Mastodon endpoints stays in [src/html/sketch/](src/html/sketch/) and is unchanged. The mission report is [docs/report.md](docs/report.md). The layout rules are in [docs/layout-rules.md](docs/layout-rules.md). The TypeScript extractor is described in [docs/typescript-extractor.md](docs/typescript-extractor.md), and its detector rules are listed in [docs/typescript-rules.md](docs/typescript-rules.md).
 
 ## How it works
 
