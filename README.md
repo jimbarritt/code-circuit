@@ -34,7 +34,7 @@ A data map holds four lists.
 
 Every edge records which extraction rule produced it.
 
-The TypeScript extractor adds fields. An endpoint carries `kind` (`http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`), `protocol`, `module`, `file` and `line`. A node carries `module`. The data map also holds a `survey` section with every finding. [docs/typescript-extractor.md](docs/typescript-extractor.md) defines them.
+The TypeScript extractor adds fields. An endpoint carries `kind` (`http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`, `cli`), `protocol`, `module`, `file` and `line`. A node carries `module`. The data map also holds a `survey` section with every finding. [docs/typescript-extractor.md](docs/typescript-extractor.md) defines them.
 
 ## Install
 
@@ -92,7 +92,7 @@ On the board:
 
 `ccircuit` reads TypeScript repos with the TypeScript compiler API. It parses each file but does not run the type checker, so the repo needs no `node_modules`.
 
-It finds these entry points: NestJS HTTP, gRPC, GraphQL, WebSocket and microservice handlers; Express, Fastify, Koa and Hono routes, with their mount prefixes; kafkajs, amqplib, NATS and Redis subscribers; SQS pollers; BullMQ and Bull workers; Nest schedules, node-cron, `cron` and `setInterval`.
+It finds these entry points: NestJS HTTP, gRPC, GraphQL, WebSocket and microservice handlers; Express, Fastify, Koa and Hono routes, with their mount prefixes; kafkajs, amqplib, NATS and Redis subscribers; SQS pollers; BullMQ and Bull workers; Nest schedules, node-cron, `cron` and `setInterval`; nest-commander, commander and yargs commands.
 
 It finds these exit points: TypeORM, MikroORM, Prisma, Mongoose, Sequelize, Knex, Drizzle, Kysely, `pg` and `mysql2`; ioredis, node-redis, cache-manager and Keyv; axios, got, fetch, undici, Nest `HttpService` and Octokit; gRPC stubs; Nest client proxies, kafkajs, amqplib, NATS and Redis producers; BullMQ and Bull queues; nodemailer, as `smtp-out`; the AWS SDK v2 and v3, and Google OAuth2.
 
@@ -137,7 +137,7 @@ notification-service
       SendEmail               SES/SendEmail                               SesEmailService.sendEmail                      apps/notification-service/src/modules/email/ses-email.service.ts:62
   notification-service: 2 entries, 2 exits
 
-total: 19 entries, 57 exits in 7 modules
+total: 20 entries, 57 exits in 7 modules
 ```
 
 The full survey is [docs/e2e/nest-turbo-starter-survey.txt](docs/e2e/nest-turbo-starter-survey.txt). The data map is [docs/e2e/nest-turbo-starter-data-map.json](docs/e2e/nest-turbo-starter-data-map.json), and the board for it is [docs/e2e/nest-turbo-starter-board.png](docs/e2e/nest-turbo-starter-board.png).
@@ -157,7 +157,7 @@ ccircuit render nest.json
 - GraphQL resolvers built by a class factory make no findings.
 - Redis and NATS `subscribe` calls whose channel is not a literal are dropped, because RxJS uses the same method name.
 - In a module that listens on several transports, a message consumer can link to a producer on another transport.
-- Command line entry points (nest-commander, commander, yargs) are not found.
+- Command line commands are found when they are declared in code with nest-commander, commander or yargs. Commands read from a directory are not found.
 - Handlers registered at run time from a list, or routes built in a loop, make findings only where the values are literals.
 
 ## Store

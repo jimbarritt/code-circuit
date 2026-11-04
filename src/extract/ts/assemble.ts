@@ -42,10 +42,10 @@ function externalName(kind: string, protocol: string): string {
 const NAME_KINDS: [RegExp, string][] = [
   [/Controller$/, "controller"], [/Resolver$/, "resolver"], [/Gateway$/, "gateway"],
   [/(Consumer|Listener|Subscriber|Handler)$/, "consumer"], [/(Processor|Worker|Job|Cron|Scheduler|Task)s?$/, "worker"],
-  [/(Repository|Repo)$/, "repository"], [/(Client|Producer|Publisher|Mailer)$/, "client"],
+  [/Command$/, "command"], [/(Repository|Repo)$/, "repository"], [/(Client|Producer|Publisher|Mailer)$/, "client"],
 ];
 const DECORATOR_KINDS: Record<string, string> = { Controller: "controller", Resolver: "resolver", WebSocketGateway: "gateway", Processor: "worker", EntityRepository: "repository" };
-const ENTRY_KINDS: Record<string, string> = { http: "controller", grpc: "controller", graphql: "resolver", websocket: "gateway", message: "consumer", queue: "worker", cron: "worker" };
+const ENTRY_KINDS: Record<string, string> = { http: "controller", grpc: "controller", graphql: "resolver", websocket: "gateway", message: "consumer", queue: "worker", cron: "worker", cli: "command" };
 
 function classKind(c: ClassSym, entryKinds: string[]): string {
   for (const [re, k] of NAME_KINDS) if (re.test(c.name)) return k;

@@ -1,5 +1,6 @@
 import type { Detector } from "../types.ts";
 import { amqp } from "./amqp.ts";
+import { cli } from "./cli.ts";
 import { cron } from "./cron.ts";
 import { graphql } from "./graphql.ts";
 import { grpc } from "./grpc.ts";
@@ -12,4 +13,4 @@ import { express, fastify, hono, koa } from "./routers.ts";
 import { sqs } from "./sqs.ts";
 import { websocket } from "./websocket.ts";
 
-export const ENTRY_DETECTORS: Detector[] = [nestHttp, express, fastify, koa, hono, grpc, graphql, websocket, nestMessage, kafka, amqp, sqs, pubsub, queue, cron];
+export const ENTRY_DETECTORS: Detector[] = [nestHttp, express, fastify, koa, hono, grpc, graphql, websocket, nestMessage, kafka, amqp, sqs, pubsub, queue, cron, cli];

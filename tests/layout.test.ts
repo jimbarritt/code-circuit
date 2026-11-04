@@ -241,3 +241,8 @@ test("an unknown node kind lays out like any other", () => {
   expect(b.pads[0].kind).toBe("message");
   expect(findCrossings(b)).toEqual([]);
 });
+
+test("a CLI endpoint has the cli kind", async () => {
+  const { endpointKind } = await import("../src/layout.ts");
+  expect(endpointKind({ method: "CLI" })).toBe("cli");
+});

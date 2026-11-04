@@ -43,6 +43,9 @@ Some limits hold for every rule:
 | `nest-timeout` | `cron` | `timeout` | `@Timeout(ms)` | `after <n>ms` | |
 | `node-cron-schedule` | `cron` | `node-cron` | `cron.schedule(expression, fn)` or `schedule(...)` from `node-cron` | expression | |
 | `cron-job` | `cron` | `cron` | `new CronJob(time, onTick)`, `CronJob.from({ cronTime, onTick })` from `cron` | cron time | |
+| `nest-commander-command` | `cli` | `nest-commander` | a class decorated `@Command({ name })` or `@SubCommand({ name })` from `nest-commander` | the name; a sub command is `<command> <name>` when a `@Command` lists it in `subCommands` | The owner is the `run` method of the class. |
+| `commander-command` | `cli` | `commander` | `program.command('name <arg>')` and `new Command('name')` in a file that imports `commander` | the first word of the usage string | The owner is the function passed to `.action(...)`, else the enclosing code. |
+| `yargs-command` | `cli` | `yargs` | `.command('name [arg]', ...)`, `.command(['name', 'alias'], ...)` and `.command({ command, handler })` in a file that imports `yargs` | the first word of the usage string | The owner is the handler. A command given by a variable shows its source text, unresolved. |
 | `set-interval` | `cron` | `interval` | global `setInterval(fn, ms)` | `every <n>ms` | Every `setInterval` counts, also a short timer for a UI or a retry. |
 
 ## Exits

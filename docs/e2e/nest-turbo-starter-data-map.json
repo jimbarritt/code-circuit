@@ -126,6 +126,17 @@
       "line": 16
     },
     {
+      "id": "user-service:CLI:create-admin",
+      "method": "CLI",
+      "path": "create-admin",
+      "entry": "user-service:CreateAdminCommand",
+      "kind": "cli",
+      "protocol": "nest-commander",
+      "module": "user-service",
+      "file": "apps/user-service/src/commands/create-admin.command.ts",
+      "line": 8
+    },
+    {
       "id": "user-service:GET:/api",
       "method": "GET",
       "path": "/api",
@@ -365,7 +376,7 @@
     {
       "id": "user-service:CreateAdminCommand",
       "name": "CreateAdminCommand",
-      "kind": "service",
+      "kind": "command",
       "module": "user-service",
       "file": "apps/user-service/src/commands/create-admin.command.ts"
     },
@@ -807,6 +818,20 @@
         "symbol": "SendMailConsumer.sendMail",
         "node": "notification-service:SendMailConsumer",
         "rule": "nest-grpc-method"
+      },
+      {
+        "direction": "entry",
+        "kind": "cli",
+        "protocol": "nest-commander",
+        "method": "CLI",
+        "target": "create-admin",
+        "resolved": true,
+        "module": "user-service",
+        "file": "apps/user-service/src/commands/create-admin.command.ts",
+        "line": 8,
+        "symbol": "CreateAdminCommand.run",
+        "node": "user-service:CreateAdminCommand",
+        "rule": "nest-commander-command"
       },
       {
         "direction": "entry",

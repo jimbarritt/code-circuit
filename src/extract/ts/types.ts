@@ -118,7 +118,7 @@ export interface SymbolIndex {
   ownerOf(fileRel: string, node: ts.Node): { id: string; symbol: string };
 }
 
-export type EntryKind = "http" | "grpc" | "graphql" | "message" | "queue" | "cron" | "websocket";
+export type EntryKind = "http" | "grpc" | "graphql" | "message" | "queue" | "cron" | "websocket" | "cli";
 export type ExitKind = "database" | "cache" | "http-out" | "grpc-out" | "message-out" | "queue-out" | "smtp-out" | "cloud";
 
 export interface Finding {

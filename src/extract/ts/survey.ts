@@ -2,7 +2,7 @@ import type { DataMap } from "../../datamap.ts";
 import type { Survey } from "./assemble.ts";
 import type { Finding } from "./types.ts";
 
-const ENTRY_ORDER = ["http", "grpc", "graphql", "websocket", "message", "queue", "cron"];
+const ENTRY_ORDER = ["http", "grpc", "graphql", "websocket", "message", "queue", "cron", "cli"];
 const EXIT_ORDER = ["database", "cache", "http-out", "grpc-out", "message-out", "queue-out", "smtp-out", "cloud"];
 const MAX_PAD = 48;
 

@@ -30,6 +30,7 @@
     --kind-client: #f2a07b;
     --kind-function: #d7d7a8;
     --kind-adapter: #d49cff;
+    --kind-command: #c3a6ff;
     --ep-http: #c68a43;
     --ep-grpc: #7fdbca;
     --ep-graphql: #f07ab9;
@@ -37,6 +38,7 @@
     --ep-queue: #5fb4c9;
     --ep-cron: #e4c27a;
     --ep-websocket: #c3e88d;
+    --ep-cli: #ffb86c;
     --ext-database: #b7a4ff;
     --ext-cache: #ff8a80;
     --ext-message-out: #82aaff;
@@ -174,8 +176,8 @@
   svg.setAttribute('width', board.width);
   svg.setAttribute('height', board.height);
 
-  const KINDS = ['controller', 'resolver', 'gateway', 'consumer', 'service', 'model', 'repository', 'worker', 'client', 'function', 'adapter'];
-  const EP_KINDS = ['http', 'grpc', 'graphql', 'message', 'queue', 'cron', 'websocket'];
+  const KINDS = ['controller', 'resolver', 'gateway', 'consumer', 'service', 'model', 'repository', 'worker', 'client', 'function', 'adapter', 'command'];
+  const EP_KINDS = ['http', 'grpc', 'graphql', 'message', 'queue', 'cron', 'websocket', 'cli'];
   const EXT_KINDS = ['database', 'cache', 'message-out', 'queue-out', 'http-out', 'grpc-out', 'smtp-out', 'cloud'];
   const known = (k) => KINDS.includes(k);
   const kindColor = (k) => (known(k) ? 'var(--kind-' + k + ')' : 'var(--muted)');
@@ -253,6 +255,7 @@
     else if (kind === 'message') el('rect', { ...a, x: x - 5, y: y - 5, width: 10, height: 10 }, g);
     else if (kind === 'queue') el('rect', { ...a, x: x - 5, y: y - 5, width: 10, height: 10, rx: 3 }, g);
     else if (kind === 'cron') { el('circle', { ...a, cx: x, cy: y, r: 5.5 }, g); el('path', { d: 'M ' + x + ' ' + (y - 3.5) + ' L ' + x + ' ' + y + ' L ' + (x + 2.5) + ' ' + y, stroke: c, fill: 'none', 'stroke-width': 1.3 }, g); }
+    else if (kind === 'cli') { el('rect', { ...a, x: x - 5.5, y: y - 5.5, width: 11, height: 11, rx: 2 }, g); el('path', { d: 'M ' + (x - 2.5) + ' ' + (y - 2.5) + ' L ' + (x + 0.5) + ' ' + y + ' L ' + (x - 2.5) + ' ' + (y + 2.5), stroke: c, fill: 'none', 'stroke-width': 1.3 }, g); }
     else if (kind === 'websocket') { el('circle', { ...a, cx: x, cy: y, r: 5.5 }, g); el('circle', { cx: x, cy: y, r: 2, fill: 'none', stroke: c, 'stroke-width': 1.3 }, g); }
     else el('circle', { ...a, cx: x, cy: y, r: 5.5 }, g);
   }

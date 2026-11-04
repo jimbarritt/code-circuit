@@ -38,6 +38,9 @@ test.skipIf(!NEST)("nest-turbo-starter: gRPC links, /api endpoints, MikroORM, Re
   expect(map.edges).toContainEqual({ from: "@app/core:GrpcGatewayAuthStrategy", to: "@app/core:RedisService", kind: "sync", rule: "di-call" });
   expect(map.survey.exits.filter((f) => f.method === "flush").every((f) => f.target === "(unit of work)")).toBe(true);
 
+  // The admin command line command is an entry of its own.
+  expect(map.survey.entries).toContainEqual(expect.objectContaining({ kind: "cli", protocol: "nest-commander", method: "CLI", target: "create-admin", symbol: "CreateAdminCommand.run" }));
+
   const text = formatSurvey(map.survey);
   expect(text).toMatch(/GRPC +UserService\/GetUser +UserConsumer\.getUser/);
   expect(text).toMatch(/total: \d+ entries, \d+ exits in \d+ modules\n$/);

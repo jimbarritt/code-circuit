@@ -88,7 +88,7 @@ Detectors return `Finding` objects. `types.ts` holds the exact type. The fields:
 | Field | Meaning |
 |---|---|
 | `direction` | `entry` or `exit` |
-| `kind` | entry: `http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`. exit: `database`, `cache`, `http-out`, `grpc-out`, `message-out`, `queue-out`, `smtp-out`, `cloud` |
+| `kind` | entry: `http`, `grpc`, `graphql`, `message`, `queue`, `cron`, `websocket`, `cli`. exit: `database`, `cache`, `http-out`, `grpc-out`, `message-out`, `queue-out`, `smtp-out`, `cloud` |
 | `protocol` | the library or transport, for example `nest`, `express`, `kafka`, `rmq`, `nats`, `bullmq`, `typeorm`, `prisma`, `kysely`, `axios`, `octokit`, `aws-ses` |
 | `method` | entry: HTTP verb, or `GRPC`, `GRAPHQL`, `KAFKA`, `RMQ`, `NATS`, `MQTT`, `REDIS`, `TCP`, `MESSAGE`, `QUEUE`, `CRON`, `WS`. exit: the operation, such as `find`, `persist`, `send`, `emit`, `get`, `POST` |
 | `target` | entry: HTTP path with prefixes, `Service/Method`, topic or pattern, queue name, schedule. exit: entity or table, topic, queue, URL or host, `Service/Method`, cloud service and operation |
@@ -113,7 +113,7 @@ Node ids: `<module>:<ClassName>` for a class, `<module>:<file>#<functionName>` f
 `extractTypeScript(root, opts)` runs every detector and builds the data map:
 
 - One endpoint per entry finding. `method` is the finding method. `path` is the target. `entry` is the node. Extra fields: `kind`, `protocol`, `module`, `file`, `line`.
-- Nodes: every class and function that owns a finding, and every class reached from those by an index call. Kinds: `controller`, `resolver`, `consumer`, `worker`, `gateway`, `service`, `repository`, `client`, `function`. Extra field: `module`.
+- Nodes: every class and function that owns a finding, and every class reached from those by an index call. Kinds: `command` (a class named `...Command`, or a `cli` entry), `controller`, `resolver`, `consumer`, `worker`, `gateway`, `service`, `repository`, `client`, `function`. Extra field: `module`.
 - `sync` edges: index calls between nodes, with rule `di-call`. Only calls made in method bodies count. An injected dependency that is never called makes no edge.
   - Inherited methods and dependencies count as the subclass's own. When a base class owns findings, the subclass links to it with rule `extends`.
   - A dependency on a class with provider bindings links to each bound class. A dependency on an abstract class with no binding links to each subclass in the repo.
@@ -155,5 +155,5 @@ With `--include`, `extract` keeps the endpoints that match, every node reachable
 - Redis and NATS `subscribe` calls whose channel does not fold are dropped, because `subscribe` is also an RxJS method. This is the one exception to the rule that a finding is never dropped.
 - An entry with protocol `nest`, in a module that listens on several transports, matches a producer on any transport.
 - Octokit calls are found only on a client created with `new Octokit` or typed `Octokit`. A client returned from a helper method is missed.
-- There is no `cli` entry kind, so nest-commander, commander and yargs commands are not found.
+- A `cli` entry is a command declared in code. A command read from a directory (`commandDir`, or a file named by a convention) is not found, and a yargs command given as an imported module shows its source text as an unresolved target.
 - `ping` on a Redis client is not an exit, because it checks the connection and moves no data.

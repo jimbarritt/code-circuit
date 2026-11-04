@@ -22,7 +22,7 @@ const EXT_MAX = 32;
 
 const ENDPOINT_KIND: Record<string, string> = {
   GRPC: "grpc", GRAPHQL: "graphql", KAFKA: "message", RMQ: "message", NATS: "message", MQTT: "message", REDIS: "message",
-  TCP: "message", MESSAGE: "message", QUEUE: "queue", CRON: "cron", WS: "websocket",
+  TCP: "message", MESSAGE: "message", QUEUE: "queue", CRON: "cron", WS: "websocket", CLI: "cli",
 };
 /** Kind of an endpoint: its own kind field, else a kind read from the method, else http. */
 export function endpointKind(e: { method: string; kind?: unknown }): string {
@@ -64,7 +64,7 @@ export interface PlacedPad {
   id: string;
   side: "left" | "right";
   label: string;
-  /** Endpoint kind (http, grpc, graphql, message, queue, cron, websocket), or external kind such as database. */
+  /** Endpoint kind (http, grpc, graphql, message, queue, cron, websocket, cli), or external kind such as database. */
   kind?: string;
   method?: string;
   path?: string;

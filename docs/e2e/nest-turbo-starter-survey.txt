@@ -98,6 +98,8 @@ user-service
       GRPC                    UserService/UpdateUser                      UserConsumer.updateUser                        apps/user-service/src/modules/user/user.consumer.ts:51
       GRPC                    UserService/DeleteUser                      UserConsumer.deleteUser                        apps/user-service/src/modules/user/user.consumer.ts:56
       GRPC                    UserService/FindUserByEmail                 UserConsumer.findUserByEmail                   apps/user-service/src/modules/user/user.consumer.ts:61
+    cli (1)
+      CLI                     create-admin                                CreateAdminCommand.run                         apps/user-service/src/commands/create-admin.command.ts:8
   exits
     database (16)
       findOne                 User                                        CreateAdminCommand.run                         apps/user-service/src/commands/create-admin.command.ts:32
@@ -116,6 +118,6 @@ user-service
       flush                   (unit of work)                              UserService.deleteUser                         apps/user-service/src/modules/user/user.service.ts:128
       findOne                 User                                        UserService.findUserByEmail                    apps/user-service/src/modules/user/user.service.ts:140
       findOne                 User                                        UserService.getUserInfo                        apps/user-service/src/modules/user/user.service.ts:178
-  user-service: 8 entries, 16 exits
+  user-service: 9 entries, 16 exits
 
-total: 19 entries, 57 exits in 7 modules
+total: 20 entries, 57 exits in 7 modules

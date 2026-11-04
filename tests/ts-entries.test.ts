@@ -357,3 +357,52 @@ async function onMessage() {}`,
   });
   expect(short(entries(root))).toEqual(["KAFKA a onMessage"]);
 });
+
+test("command line entries: nest-commander, commander and yargs", () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "tool" }),
+    "src/admin.command.ts": `import { Command, CommandRunner, SubCommand } from 'nest-commander';
+@Command({ name: 'db', subCommands: [MigrateCommand] })
+export class DbCommand extends CommandRunner { async run() {} }
+@SubCommand({ name: 'migrate' })
+export class MigrateCommand extends CommandRunner { async run() {} }
+@Command({ name: 'create-admin', description: 'x' })
+export class CreateAdminCommand extends CommandRunner { async run() {} }
+`,
+    "src/cmd.ts": `import { Command, program } from 'commander';
+export const sync = () => {};
+program.command('sync <source>').description('x').action(sync);
+program.command('export').action(() => {});
+const sub = new Command('report');
+`,
+    "src/y.ts": `import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+const run = () => {};
+yargs(hideBin(process.argv))
+  .command('serve [port]', 'start', {}, run)
+  .command({ command: 'build', handler: run })
+  .command(['deploy', 'd'], 'ship', () => {}, () => {})
+  .command(process.env.CMD as string, 'x', {}, run)
+  .parse();
+`,
+    "src/other.ts": `const router = { command(x: string) {} };
+router.command('not-a-cli');
+`,
+  });
+  const found = entries(root).filter((f) => f.kind === "cli");
+  expect(short(found)).toEqual([
+    "CLI build run",
+    "CLI create-admin CreateAdminCommand.run",
+    "CLI db DbCommand.run",
+    "CLI db migrate MigrateCommand.run",
+    "CLI deploy <anonymous>".replace("<anonymous>", found.find((f) => f.target === "deploy")!.symbol),
+    "CLI export " + found.find((f) => f.target === "export")!.symbol,
+    "CLI process.env.CMD ? run",
+    "CLI report " + found.find((f) => f.target === "report")!.symbol,
+    "CLI serve run",
+    "CLI sync sync",
+  ].sort());
+  expect(found.find((f) => f.target === "db migrate")!.protocol).toBe("nest-commander");
+  expect(found.find((f) => f.target === "sync")!.protocol).toBe("commander");
+  expect(found.find((f) => f.target === "serve")!.protocol).toBe("yargs");
+});
